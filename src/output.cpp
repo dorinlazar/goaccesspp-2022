@@ -49,14 +49,14 @@
 #include "util.h"
 #include "xmalloc.h"
 
-#include "tpls.h"
-#include "bootstrapcss.h"
-#include "facss.h"
-#include "appcss.h"
-#include "d3js.h"
-#include "hoganjs.h"
-#include "chartsjs.h"
-#include "appjs.h"
+#include "resources/tpls.h"
+#include "resources/bootstrapcss.h"
+#include "resources/facss.h"
+#include "resources/appcss.h"
+#include "resources/d3js.h"
+#include "resources/hoganjs.h"
+#include "resources/chartsjs.h"
+#include "resources/appjs.h"
 
 static void hits_bw_plot(FILE* fp, GHTMLPlot plot, int sp);
 static void hits_bw_req_plot(FILE* fp, GHTMLPlot plot, int sp);
