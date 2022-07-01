@@ -536,7 +536,6 @@ static char* parse_req(char* line, char** method, char** protocol) {
   return dreq;
 }
 
-#if defined(HAVE_LIBSSL) && defined(HAVE_CIPHER_STD_NAME)
 static int extract_tls_version_cipher(char* tkn, char** cipher, char** tls_version) {
   SSL_CTX* ctx = NULL;
   SSL* ssl = NULL;
@@ -593,7 +592,6 @@ fail:
     SSL_CTX_free(ctx);
   return 1;
 }
-#endif
 
 /* Extract the next delimiter given a log format and copy the delimiter to the
  * destination buffer.
@@ -1138,7 +1136,6 @@ static int parse_specifier(GLogItem* logitem, char** str, const char* p, const c
     if (!(tkn = parse_string(&(*str), end, 1)))
       return spec_err(logitem, SPEC_TOKN_NUL, *p, NULL);
 
-#if defined(HAVE_LIBSSL) && defined(HAVE_CIPHER_STD_NAME)
     {
       char* tmp = NULL;
       for (tmp = tkn; isdigit(*tmp); tmp++)
@@ -1148,9 +1145,6 @@ static int parse_specifier(GLogItem* logitem, char** str, const char* p, const c
       else
         logitem->tls_cypher = tkn;
     }
-#else
-    logitem->tls_cypher = tkn;
-#endif
 
     break;
 
