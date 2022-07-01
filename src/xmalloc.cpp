@@ -1,4 +1,5 @@
 /**
+ * xmalloc.c -- *alloc functions with error handling
  *    ______      ___
  *   / ____/___  /   | _____________  __________
  *  / / __/ __ \/ /| |/ ___/ ___/ _ \/ ___/ ___/
@@ -27,13 +28,53 @@
  * SOFTWARE.
  */
 
-#ifndef CSV_H_INCLUDED
-#define CSV_H_INCLUDED
-
 #include <stdio.h>
-#include "parser.h"
-#include "settings.h"
-
-void output_csv(GHolder* holder, const char* filename);
-
+#if !defined __SUNPRO_C
+#include <stdint.h>
 #endif
+#include <stdlib.h>
+#include <string.h>
+
+#include "error.h"
+#include "xmalloc.h"
+
+/* Self-checking wrapper to malloc() */
+void* xmalloc(size_t size) {
+  void* ptr;
+
+  if ((ptr = malloc(size)) == NULL)
+    FATAL("Unable to allocate memory - failed.");
+
+  return (ptr);
+}
+
+char* xstrdup(const char* s) {
+  char* ptr;
+  size_t len;
+
+  len = strlen(s) + 1;
+  ptr = (char*)xmalloc(len);
+
+  strncpy(ptr, s, len);
+  return (ptr);
+}
+
+/* Self-checking wrapper to calloc() */
+void* xcalloc(size_t nmemb, size_t size) {
+  void* ptr;
+
+  if ((ptr = calloc(nmemb, size)) == NULL)
+    FATAL("Unable to calloc memory - failed.");
+
+  return (ptr);
+}
+
+/* Self-checking wrapper to realloc() */
+void* xrealloc(void* oldptr, size_t size) {
+  void* newptr;
+
+  if ((newptr = realloc(oldptr, size)) == NULL)
+    FATAL("Unable to reallocate memory - failed");
+
+  return (newptr);
+}
