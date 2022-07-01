@@ -31,7 +31,6 @@
 #define _LARGEFILE_SOURCE
 #define _LARGEFILE64_SOURCE
 #define _FILE_OFFSET_BITS 64
-#define HAVE_GEOLOCATION
 
 #include <errno.h>
 #include <ctype.h>
@@ -85,9 +84,7 @@ static GPanel paneling[] = {
     {STATUS_CODES, print_json_data, print_json_sub_items},
     {REMOTE_USER, print_json_data, NULL},
     {CACHE_STATUS, print_json_data, NULL},
-#ifdef HAVE_GEOLOCATION
     {GEO_LOCATION, print_json_data, print_json_sub_items},
-#endif
     {MIME_TYPE, print_json_data, print_json_sub_items},
     {TLS_TYPE, print_json_data, print_json_sub_items},
 

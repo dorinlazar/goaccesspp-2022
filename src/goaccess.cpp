@@ -53,12 +53,7 @@
 #include <inttypes.h>
 
 #include "gkhash.h"
-
-#define HAVE_GEOLOCATION
-#ifdef HAVE_GEOLOCATION
 #include "geoip1.h"
-#endif
-
 #include "browsers.h"
 #include "csv.h"
 #include "error.h"
@@ -112,9 +107,7 @@ static GScroll gscroll = {
         {0, 0}, /* STATUS_CODES    { scroll, offset} */
         {0, 0}, /* REMOTE_USER     { scroll, offset} */
         {0, 0}, /* CACHE_STATUS    { scroll, offset} */
-#ifdef HAVE_GEOLOCATION
         {0, 0}, /* GEO_LOCATION    { scroll, offset} */
-#endif
         {0, 0}, /* MIME_TYPE       { scroll, offset} */
         {0, 0}, /* TLS_TYPE        { scroll, offset} */
     },
@@ -151,9 +144,7 @@ static void house_keeping(void) {
   }
 
   /* GEOLOCATION */
-#ifdef HAVE_GEOLOCATION
   geoip_free();
-#endif
 
   /* INVALID REQUESTS */
   if (conf.invalid_requests_log) {
@@ -716,25 +707,14 @@ void* read_client(void* ptr_data) {
 
 /* Parse tailed lines */
 static void parse_tail_follow(GLog* glog, FILE* fp) {
-#ifdef WITH_GETLINE
   char* buf = NULL;
-#else
-  char buf[LINE_BUFFER] = {0};
-#endif
 
   glog->bytes = 0;
-#ifdef WITH_GETLINE
   while ((buf = fgetline(fp)) != NULL) {
-#else
-  while (fgets(buf, LINE_BUFFER, fp) != NULL) {
-#endif
     pthread_mutex_lock(&gdns_thread.mutex);
     pre_process_log(glog, buf, 0);
     pthread_mutex_unlock(&gdns_thread.mutex);
     glog->bytes += strlen(buf);
-#ifdef WITH_GETLINE
-    free(buf);
-#endif
     /* If the ingress rate is greater than MAX_BATCH_LINES,
      * then we break and allow to re-render the UI */
     if (++glog->read % MAX_BATCH_LINES == 0)
@@ -1048,13 +1028,11 @@ static void get_keys(Logs* logs) {
       if (set_module_to(&gscroll, CACHE_STATUS) == 0)
         render_screens(offset);
       break;
-#ifdef HAVE_GEOLOCATION
     case 94: /* Shift + 6 */
       /* reset expanded module */
       if (set_module_to(&gscroll, GEO_LOCATION) == 0)
         render_screens(offset);
       break;
-#endif
     case 38: /* Shift + 7 */
       /* reset expanded module */
       if (set_module_to(&gscroll, MIME_TYPE) == 0)
@@ -1379,9 +1357,7 @@ static Logs* initializer(void) {
 
   parse_browsers_file();
 
-#ifdef HAVE_GEOLOCATION
   init_geoip();
-#endif
 
   set_io(&pipe);
 

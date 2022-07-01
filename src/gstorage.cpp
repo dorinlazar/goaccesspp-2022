@@ -36,12 +36,7 @@
 #include <string.h>
 
 #include "gstorage.h"
-
-#define HAVE_GEOLOCATION
-#ifdef HAVE_GEOLOCATION
 #include "geoip1.h"
-#endif
-
 #include "browsers.h"
 #include "commons.h"
 #include "error.h"
@@ -69,9 +64,7 @@ static int gen_request_key(GKeyData* kdata, GLogItem* logitem);
 static int gen_static_request_key(GKeyData* kdata, GLogItem* logitem);
 static int gen_status_code_key(GKeyData* kdata, GLogItem* logitem);
 static int gen_visit_time_key(GKeyData* kdata, GLogItem* logitem);
-#ifdef HAVE_GEOLOCATION
 static int gen_geolocation_key(GKeyData* kdata, GLogItem* logitem);
-#endif
 /* UMS */
 static int gen_mime_type_key(GKeyData* kdata, GLogItem* logitem);
 static int gen_tls_type_key(GKeyData* kdata, GLogItem* logitem);
@@ -271,7 +264,6 @@ static GParse paneling[] = {
         NULL,
         NULL,
     },
-#ifdef HAVE_GEOLOCATION
     {
         GEO_LOCATION,
         gen_geolocation_key,
@@ -286,7 +278,6 @@ static GParse paneling[] = {
         NULL,
         NULL,
     },
-#endif
     {
         STATUS_CODES,
         gen_status_code_key,
@@ -1149,7 +1140,6 @@ static int gen_keyphrase_key(GKeyData* kdata, GLogItem* logitem) {
   return 0;
 }
 
-#ifdef HAVE_GEOLOCATION
 /* Extract geolocation for the given host.
  *
  * On error, 1 is returned.
@@ -1164,14 +1154,12 @@ static int extract_geolocation(GLogItem* logitem, char* continent, char* country
 
   return 0;
 }
-#endif
 
 /* A wrapper to generate a unique key for the geolocation panel.
  *
  * On error, 1 is returned.
  * On success, the generated geolocation key is assigned to our key
  * data structure. */
-#ifdef HAVE_GEOLOCATION
 static int gen_geolocation_key(GKeyData* kdata, GLogItem* logitem) {
   char continent[CONTINENT_LEN] = "";
   char country[COUNTRY_LEN] = "";
@@ -1191,7 +1179,6 @@ static int gen_geolocation_key(GKeyData* kdata, GLogItem* logitem) {
 
   return 0;
 }
-#endif
 
 /* A wrapper to generate a unique key for the status code panel.
  *

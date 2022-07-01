@@ -28,16 +28,13 @@
  * SOFTWARE.
  */
 
-#define HAVE_GEOLOCATION
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
 #include <errno.h>
 
-#ifdef HAVE_LIBGEOIP
 #include <GeoIP.h>
-#endif
 
 #include "options.h"
 
@@ -47,11 +44,7 @@
 
 #include "xmalloc.h"
 
-static char short_options[] = "f:e:p:o:l:H:M:S:b:"
-#ifdef HAVE_LIBGEOIP
-                              "g"
-#endif
-                              "acirmMhHqdsV";
+static char short_options[] = "f:e:p:o:l:H:M:S:b:gacirmMhHqdsV";
 
 struct option long_opts[] = {{"agent-list", no_argument, 0, 'a'},
                              {"browsers-file", required_argument, 0, 'b'},
@@ -59,9 +52,7 @@ struct option long_opts[] = {{"agent-list", no_argument, 0, 'a'},
                              {"config-file", required_argument, 0, 'p'},
                              {"debug-file", required_argument, 0, 'l'},
                              {"exclude-ip", required_argument, 0, 'e'},
-#ifdef HAVE_LIBGEOIP
                              {"std-geoip", no_argument, 0, 'g'},
-#endif
                              {"help", no_argument, 0, 'h'},
                              {"hl-header", no_argument, 0, 'i'},
                              {"http-method", required_argument, 0, 'M'},
@@ -137,16 +128,12 @@ struct option long_opts[] = {{"agent-list", no_argument, 0, 'a'},
                              {"static-file", required_argument, 0, 0},
                              {"tz", required_argument, 0, 0},
                              {"user-name", required_argument, 0, 0},
-#ifdef HAVE_LIBSSL
                              {"ssl-cert", required_argument, 0, 0},
                              {"ssl-key", required_argument, 0, 0},
-#endif
                              {"time-format", required_argument, 0, 0},
                              {"ws-url", required_argument, 0, 0},
                              {"ping-interval", required_argument, 0, 0},
-#ifdef HAVE_GEOLOCATION
                              {"geoip-database", required_argument, 0, 0},
-#endif
                              {0, 0, 0, 0}};
 
 /* Command line help. */
@@ -262,16 +249,12 @@ void cmd_help(void) {
           "  --static-file=<extension>       - Add static file extension. e.g.: .mp3. Extensions are case sensitive.\n"
           "\n"
 
-/* GeoIP Options */
-#ifdef HAVE_GEOLOCATION
+      /* GeoIP Options */
       CYN "GEOIP OPTIONS\n\n" RESET
-#ifdef HAVE_LIBGEOIP
           "  -g --std-geoip                  - Standard GeoIP database for less memory consumption.\n"
-#endif
           "  --geoip-database=<path>         - Specify path to GeoIP database file.\n"
           "                                    i.e., GeoLiteCity.dat, GeoIPv6.dat ...\n"
           "\n"
-#endif
 
       /* Other Options */
       CYN "OTHER OPTIONS\n\n" RESET "  -h --help                       - This help.\n"
@@ -670,9 +653,7 @@ void add_dash_filename(void) {
 void read_option_args(int argc, char** argv) {
   int o, idx = 0;
 
-#ifdef HAVE_LIBGEOIP
   conf.geo_db = GEOIP_MEMORY_CACHE;
-#endif
 
   while ((o = getopt_long(argc, argv, short_options, long_opts, &idx)) >= 0) {
     if (-1 == o || EOF == o)
@@ -692,9 +673,7 @@ void read_option_args(int argc, char** argv) {
     case 'p':
       /* ignore it */
       break;
-#ifdef HAVE_LIBGEOIP
     case 'g': conf.geo_db = GEOIP_STANDARD; break;
-#endif
     case 'e':
       if (conf.ignore_ip_idx < MAX_IGNORE_IPS)
         conf.ignore_ips[conf.ignore_ip_idx++] = optarg;

@@ -1834,7 +1834,6 @@ char* fgetline(FILE* fp) {
  *
  * On error, 1 is returned.
  * On success, 0 is returned. */
-#ifdef WITH_GETLINE
 static int read_lines(FILE* fp, GLog* glog, int dry_run) {
   char* line = NULL;
   int ret = 0, cnt = 0, test = conf.num_tests > 0 ? 1 : 0;
@@ -1868,43 +1867,6 @@ out:
      - reached the end of file, test flag was still set and we processed lines */
   return test || ret || (test && glog->processed);
 }
-#endif
-
-/* Iterate over the log and read line by line (uses a buffer of fixed size).
- *
- * On error, 1 is returned.
- * On success, 0 is returned. */
-#ifndef WITH_GETLINE
-static int read_lines(FILE* fp, GLog* glog, int dry_run) {
-  char* s = NULL;
-  char line[LINE_BUFFER] = {0};
-  int ret = 0, cnt = 0, test = conf.num_tests > 0 ? 1 : 0;
-
-  glog->bytes = 0;
-  while ((s = fgets(line, LINE_BUFFER, fp)) != NULL) {
-    /* handle SIGINT */
-    if (conf.stop_processing)
-      break;
-    if ((ret = read_line(glog, line, &test, &cnt, dry_run)))
-      break;
-    if (dry_run && NUM_TESTS == cnt)
-      break;
-    glog->bytes += strlen(line);
-    glog->read++;
-  }
-
-  /* if no data was available to read from (probably from a pipe) and
-   * still in test mode, we simply return until data becomes available */
-  if (!s && (errno == EAGAIN || errno == EWOULDBLOCK) && test)
-    return 0;
-
-  /* fails if
-     - we're still reading the log but the test flag was still set
-     - ret flag is not 0, read_line failed
-     - reached the end of file, test flag was still set and we processed lines */
-  return (s && test) || ret || (!s && test && glog->processed);
-}
-#endif
 
 /* Read the given log file and attempt to mmap a fixed number of bytes so we
  * can compare its content on future runs.

@@ -28,7 +28,6 @@
  * SOFTWARE.
  */
 
-#define HAVE_GEOLOCATION
 #define _LARGEFILE_SOURCE
 #define _LARGEFILE64_SOURCE
 #define _FILE_OFFSET_BITS 64
@@ -72,10 +71,7 @@ static GOutput outputting[] = {
     {VIRTUAL_HOSTS, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0},   {REFERRERS, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0},
     {REFERRING_SITES, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0}, {KEYPHRASES, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0},
     {STATUS_CODES, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0},    {REMOTE_USER, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0},
-    {CACHE_STATUS, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0},
-#ifdef HAVE_GEOLOCATION
-    {GEO_LOCATION, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0},
-#endif
+    {CACHE_STATUS, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0},    {GEO_LOCATION, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0},
     {MIME_TYPE, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0},       {TLS_TYPE, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0},
 };
 
@@ -235,10 +231,7 @@ const char* module_to_label(GModule module) {
       VISITORS_LABEL,      REQUESTS_LABEL,    REQUESTS_STATIC_LABEL, NOT_FOUND_LABEL,
       HOSTS_LABEL,         OS_LABEL,          BROWSERS_LABEL,        VISIT_TIMES_LABEL,
       VIRTUAL_HOSTS_LABEL, REFERRERS_LABEL,   REFERRING_SITES_LABEL, KEYPHRASES_LABEL,
-      STATUS_CODES_LABEL,  REMOTE_USER_LABEL, CACHE_STATUS_LABEL,
-#ifdef HAVE_GEOLOCATION
-      GEO_LOCATION_LABEL,
-#endif
+      STATUS_CODES_LABEL,  REMOTE_USER_LABEL, CACHE_STATUS_LABEL,    GEO_LOCATION_LABEL,
       MIME_TYPE_LABEL,     TLS_TYPE_LABEL,
   };
 
@@ -250,13 +243,9 @@ const char* module_to_label(GModule module) {
  * On success, a string containing the label id is returned. */
 const char* module_to_id(GModule module) {
   static const char* modules[] = {
-      VISITORS_ID,     REQUESTS_ID,    REQUESTS_STATIC_ID, NOT_FOUND_ID, HOSTS_ID,           OS_ID,
-      BROWSERS_ID,     VISIT_TIMES_ID, VIRTUAL_HOSTS_ID,   REFERRERS_ID, REFERRING_SITES_ID, KEYPHRASES_ID,
-      STATUS_CODES_ID, REMOTE_USER_ID, CACHE_STATUS_ID,
-#ifdef HAVE_GEOLOCATION
-      GEO_LOCATION_ID,
-#endif
-      MIME_TYPE_ID,    TLS_TYPE_ID,
+      VISITORS_ID,     REQUESTS_ID,    REQUESTS_STATIC_ID, NOT_FOUND_ID,    HOSTS_ID,           OS_ID,
+      BROWSERS_ID,     VISIT_TIMES_ID, VIRTUAL_HOSTS_ID,   REFERRERS_ID,    REFERRING_SITES_ID, KEYPHRASES_ID,
+      STATUS_CODES_ID, REMOTE_USER_ID, CACHE_STATUS_ID,    GEO_LOCATION_ID, MIME_TYPE_ID,       TLS_TYPE_ID,
   };
 
   return _(modules[module]);
@@ -267,13 +256,11 @@ const char* module_to_id(GModule module) {
  * On success, a string containing the label header is returned. */
 const char* module_to_head(GModule module) {
   static const char* modules[] = {
-      VISITORS_HEAD,     REQUESTS_HEAD,    REQUESTS_STATIC_HEAD, NOT_FOUND_HEAD, HOSTS_HEAD,           OS_HEAD,
-      BROWSERS_HEAD,     VISIT_TIMES_HEAD, VIRTUAL_HOSTS_HEAD,   REFERRERS_HEAD, REFERRING_SITES_HEAD, KEYPHRASES_HEAD,
-      STATUS_CODES_HEAD, REMOTE_USER_HEAD, CACHE_STATUS_HEAD,
-#ifdef HAVE_GEOLOCATION
-      GEO_LOCATION_HEAD,
-#endif
-      MIME_TYPE_HEAD,    TLS_TYPE_HEAD,
+      VISITORS_HEAD,      REQUESTS_HEAD,    REQUESTS_STATIC_HEAD, NOT_FOUND_HEAD,
+      HOSTS_HEAD,         OS_HEAD,          BROWSERS_HEAD,        VISIT_TIMES_HEAD,
+      VIRTUAL_HOSTS_HEAD, REFERRERS_HEAD,   REFERRING_SITES_HEAD, KEYPHRASES_HEAD,
+      STATUS_CODES_HEAD,  REMOTE_USER_HEAD, CACHE_STATUS_HEAD,    GEO_LOCATION_HEAD,
+      MIME_TYPE_HEAD,     TLS_TYPE_HEAD,
   };
 
   if (!conf.ignore_crawlers)
@@ -288,13 +275,11 @@ const char* module_to_head(GModule module) {
  * On success, a string containing the label description is returned. */
 const char* module_to_desc(GModule module) {
   static const char* modules[] = {
-      VISITORS_DESC,     REQUESTS_DESC,    REQUESTS_STATIC_DESC, NOT_FOUND_DESC, HOSTS_DESC,           OS_DESC,
-      BROWSERS_DESC,     VISIT_TIMES_DESC, VIRTUAL_HOSTS_DESC,   REFERRERS_DESC, REFERRING_SITES_DESC, KEYPHRASES_DESC,
-      STATUS_CODES_DESC, REMOTE_USER_DESC, CACHE_STATUS_DESC,
-#ifdef HAVE_GEOLOCATION
-      GEO_LOCATION_DESC,
-#endif
-      MIME_TYPE_DESC,    TLS_TYPE_DESC,
+      VISITORS_DESC,      REQUESTS_DESC,    REQUESTS_STATIC_DESC, NOT_FOUND_DESC,
+      HOSTS_DESC,         OS_DESC,          BROWSERS_DESC,        VISIT_TIMES_DESC,
+      VIRTUAL_HOSTS_DESC, REFERRERS_DESC,   REFERRING_SITES_DESC, KEYPHRASES_DESC,
+      STATUS_CODES_DESC,  REMOTE_USER_DESC, CACHE_STATUS_DESC,    GEO_LOCATION_DESC,
+      MIME_TYPE_DESC,     TLS_TYPE_DESC,
   };
 
   return _(modules[module]);

@@ -172,8 +172,6 @@ static GHTML htmldef[] = {
          {CHART_VBAR, hits_visitors_plot, 0, 0, NULL, NULL},
          {CHART_VBAR, hits_bw_plot, 0, 0, NULL, NULL},
      }},
-#define HAVE_GEOLOCATION
-#ifdef HAVE_GEOLOCATION
     {GEO_LOCATION,
      1,
      print_metrics,
@@ -181,7 +179,6 @@ static GHTML htmldef[] = {
          {CHART_VBAR, hits_visitors_plot, 0, 1, NULL, NULL},
          {CHART_VBAR, hits_bw_plot, 0, 1, NULL, NULL},
      }},
-#endif
     {MIME_TYPE,
      1,
      print_metrics,

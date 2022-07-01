@@ -96,9 +96,7 @@ static WSConfig wsconfig = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr
 static void handle_read_close(int* conn, WSClient* client, WSServer* server);
 static void handle_reads(int* conn, WSServer* server);
 static void handle_writes(int* conn, WSServer* server);
-#ifdef HAVE_LIBSSL
 static int shutdown_ssl(WSClient* client);
-#endif
 
 /* Determine if the given string is valid UTF-8.
  *
@@ -498,7 +496,6 @@ static void ws_remove_client_from_list(WSClient* client, WSServer* server) {
   list_remove_node(&server->colist, node);
 }
 
-#if HAVE_LIBSSL
 /* Attempt to send the TLS/SSL "close notify" shutdown and and removes
  * the SSL structure pointed to by ssl and frees up the allocated
  * memory. */
@@ -527,7 +524,6 @@ static void ws_ssl_cleanup(WSServer* server) {
 #endif
   EVP_cleanup();
 }
-#endif
 
 /* Remove all clients that are still hanging out. */
 static int ws_remove_dangling_clients(void* value, void* user_data) {
@@ -541,10 +537,8 @@ static int ws_remove_dangling_clients(void* value, void* user_data) {
     ws_clear_handshake_headers(client->headers);
   if (client->sockqueue)
     ws_clear_queue(client);
-#ifdef HAVE_LIBSSL
   if (client->ssl)
     ws_shutdown_dangling_clients(client);
-#endif
 
   return 0;
 }
@@ -608,9 +602,7 @@ void ws_stop(WSServer* server) {
   if (server->colist)
     list_remove_nodes(server->colist);
 
-#ifdef HAVE_LIBSSL
   ws_ssl_cleanup(server);
-#endif
 
   free(server);
   free(fdstate);
@@ -638,7 +630,6 @@ static void ws_append_str(char** dest, const char* src) {
   *dest = str;
 }
 
-#if HAVE_LIBSSL
 /* Create a new SSL_CTX object as framework to establish TLS/SSL
  * enabled connections.
  *
@@ -781,7 +772,7 @@ static int accept_ssl(WSClient* client) {
 
   /* all good on TLS handshake */
   if ((ret = SSL_accept(client->ssl)) > 0) {
-    client->sslstatus &= ~WS_TLS_ACCEPTING;
+    client->sslstatus = (WSStatus)(client->sslstatus & ~WS_TLS_ACCEPTING);
     return 0;
   }
 
@@ -803,7 +794,9 @@ static int accept_ssl(WSClient* client) {
     /* FALLTHRU */
   case SSL_ERROR_ZERO_RETURN:
   case SSL_ERROR_WANT_X509_LOOKUP:
-  default: client->sslstatus &= ~WS_TLS_ACCEPTING; return ws_set_status(client, (WSStatus)(WS_ERR | WS_CLOSE), 1);
+  default:
+    client->sslstatus = (WSStatus)(client->sslstatus & ~WS_TLS_ACCEPTING);
+    return ws_set_status(client, (WSStatus)(WS_ERR | WS_CLOSE), 1);
   }
 
   return ret;
@@ -932,7 +925,6 @@ static int read_ssl_socket(WSClient* client, char* buffer, int size) {
 
   return bytes;
 }
-#endif
 
 /* Get sockaddr, either IPv4 or IPv6 */
 static void* ws_get_raddr(struct sockaddr* sa) {
@@ -1205,14 +1197,10 @@ static int read_plain_socket(WSClient* client, char* buffer, int size) {
  * On error, -1 is returned and the connection status is set.
  * On success, the number of bytes read is returned. */
 static int read_socket(WSClient* client, char* buffer, int size) {
-#ifdef HAVE_LIBSSL
   if (wsconfig.use_ssl)
     return read_ssl_socket(client, buffer, size);
   else
     return read_plain_socket(client, buffer, size);
-#else
-  return read_plain_socket(client, buffer, size);
-#endif
 }
 
 static int send_plain_buffer(WSClient* client, const char* buffer, int len) {
@@ -1220,14 +1208,10 @@ static int send_plain_buffer(WSClient* client, const char* buffer, int len) {
 }
 
 static int send_buffer(WSClient* client, const char* buffer, int len) {
-#ifdef HAVE_LIBSSL
   if (wsconfig.use_ssl)
     return send_ssl_buffer(client, buffer, len);
   else
     return send_plain_buffer(client, buffer, len);
-#else
-  return send_plain_buffer(client, buffer, len);
-#endif
 }
 
 /* Attempt to send the given buffer to the given socket.
@@ -2039,10 +2023,8 @@ static int read_client_data(WSClient* client, WSServer* server) {
 static void handle_tcp_close(int conn, WSClient* client, WSServer* server) {
   LOG(("Closing TCP %d [%s]\n", client->listener, client->remote_ip));
 
-#ifdef HAVE_LIBSSL
   if (client->ssl)
     shutdown_ssl(client);
-#endif
 
   shutdown(conn, SHUT_RDWR);
   /* upon close, call onclose() callback */
@@ -2064,11 +2046,9 @@ static void handle_tcp_close(int conn, WSClient* client, WSServer* server) {
   server->closing = 0;
   ws_close(conn);
 
-#ifdef HAVE_LIBSSL
   if (client->ssl)
     SSL_free(client->ssl);
   client->ssl = NULL;
-#endif
 
   /* remove client from our list */
   ws_remove_client_from_list(client, server);
@@ -2099,11 +2079,9 @@ static void handle_accept(int listener, WSServer* server) {
   if (!(client = ws_get_client_from_list(newfd, &server->colist)))
     return;
 
-#ifdef HAVE_LIBSSL
   /* set flag to do TLS handshake */
   if (wsconfig.use_ssl)
-    client->sslstatus |= WS_TLS_ACCEPTING;
-#endif
+    client->sslstatus = (WSStatus)(client->sslstatus | WS_TLS_ACCEPTING);
 
   LOG(("Accepted: %d [%s]\n", newfd, client->remote_ip));
 }
@@ -2117,10 +2095,8 @@ static void handle_reads(int* conn, WSServer* server) {
 
   LOG(("Handling read %d [%s]...\n", client->listener, client->remote_ip));
 
-#ifdef HAVE_LIBSSL
   if (handle_ssl_pending_rw(conn, server, client) == 0)
     return;
-#endif
 
   client->start_proc = client->end_proc = (struct timeval){0, 0};
 
@@ -2143,10 +2119,8 @@ static void handle_writes(int* conn, WSServer* server) {
   if (!(client = ws_get_client_from_list(*conn, &server->colist)))
     return;
 
-#ifdef HAVE_LIBSSL
   if (handle_ssl_pending_rw(conn, server, client) == 0)
     return;
-#endif
 
   ws_respond(client, NULL, 0); /* buffered data */
   /* done sending data */
@@ -2653,7 +2627,6 @@ void ws_start(WSServer* server) {
   if (server->self_pipe[0] != -1)
     set_pollfd(server->self_pipe[0], POLLIN);
 
-#ifdef HAVE_LIBSSL
   if (wsconfig.sslcert && wsconfig.sslkey) {
     LOG(("==Using TLS/SSL==\n"));
     wsconfig.use_ssl = 1;
@@ -2662,7 +2635,6 @@ void ws_start(WSServer* server) {
       return;
     }
   }
-#endif
 
   ws_socket(&listener);
   set_pollfd(listener, POLLIN);

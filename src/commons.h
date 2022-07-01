@@ -47,13 +47,7 @@ extern struct tm now_tm;
 #define INIT_BUF_SIZE 1024
 
 /* total number of modules */
-
-#define HAVE_GEOLOCATION
-#ifdef HAVE_GEOLOCATION
 #define TOTAL_MODULES 18
-#else
-#define TOTAL_MODULES 17
-#endif
 
 /* maximum number of items within a panel */
 #define MAX_CHOICES 366
@@ -101,9 +95,7 @@ typedef enum MODULES {
   STATUS_CODES,
   REMOTE_USER,
   CACHE_STATUS,
-#ifdef HAVE_GEOLOCATION
   GEO_LOCATION,
-#endif
   MIME_TYPE,
   TLS_TYPE,
 } GModule;

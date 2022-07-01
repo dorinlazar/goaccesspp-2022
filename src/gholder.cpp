@@ -44,10 +44,7 @@
 #include "util.h"
 #include "xmalloc.h"
 
-#define HAVE_GEOLOCATION
-#ifdef HAVE_GEOLOCATION
 #include "geoip1.h"
-#endif
 
 typedef struct GHolderPanel_ {
   GModule module;
@@ -76,9 +73,7 @@ static GHolderPanel paneling[] = {
     {STATUS_CODES, add_root_to_holder, NULL},
     {REMOTE_USER, add_data_to_holder, NULL},
     {CACHE_STATUS, add_data_to_holder, NULL},
-#ifdef HAVE_GEOLOCATION
     {GEO_LOCATION, add_root_to_holder, NULL},
-#endif
     {MIME_TYPE, add_root_to_holder, NULL},
     {TLS_TYPE, add_root_to_holder, NULL},
 };
@@ -313,14 +308,11 @@ static int set_host_child_metrics(char* data, uint8_t id, GMetrics** nmetrics) {
  * On success, the host panel data is set. */
 static void set_host_sub_list(GHolder* h, GSubList* sub_list) {
   GMetrics* nmetrics;
-#ifdef HAVE_GEOLOCATION
   char city[CITY_LEN] = "";
   char continent[CONTINENT_LEN] = "";
   char country[COUNTRY_LEN] = "";
-#endif
 
   char *host = h->items[h->idx].metrics->data, *hostname = NULL;
-#ifdef HAVE_GEOLOCATION
   /* add geolocation child nodes */
   set_geolocation(host, continent, country, city);
 
@@ -345,7 +337,6 @@ static void set_host_sub_list(GHolder* h, GSubList* sub_list) {
     /* flag only */
     conf.has_geocity = 1;
   }
-#endif
 
   /* hostname */
   if (conf.enable_html_resolver && conf.output_stdout && !conf.no_ip_validation) {
@@ -611,13 +602,6 @@ void load_holder_data(GRawData* raw_data, GHolder* h, GModule module, GSort sort
   uint32_t size = 0, max_choices = get_max_choices();
   const GHolderPanel* panel = panel_lookup(module);
 
-#ifdef _DEBUG
-  clock_t begin = clock();
-  double taken;
-  char* modstr = NULL;
-  LOG_DEBUG(("== load_holder_data ==\n"));
-#endif
-
   size = raw_data->size;
   h->holder_size = size > max_choices ? max_choices : size;
   h->ht_size = size;
@@ -633,11 +617,4 @@ void load_holder_data(GRawData* raw_data, GHolder* h, GModule module, GSort sort
   if (h->sub_items_size)
     sort_sub_list(h, sort);
   free_raw_data(raw_data);
-
-#ifdef _DEBUG
-  modstr = get_module_str(module);
-  taken = (double)(clock() - begin) / CLOCKS_PER_SEC;
-  LOG_DEBUG(("== %-30s%f\n\n", modstr, taken));
-  free(modstr);
-#endif
 }

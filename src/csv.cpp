@@ -67,10 +67,7 @@ static GCSVPanel paneling[] = {
     {BROWSERS, print_csv_data},     {VISIT_TIMES, print_csv_data},     {VIRTUAL_HOSTS, print_csv_data},
     {REFERRERS, print_csv_data},    {REFERRING_SITES, print_csv_data}, {KEYPHRASES, print_csv_data},
     {STATUS_CODES, print_csv_data}, {REMOTE_USER, print_csv_data},     {CACHE_STATUS, print_csv_data},
-#ifdef HAVE_GEOLOCATION
-    {GEO_LOCATION, print_csv_data},
-#endif
-    {MIME_TYPE, print_csv_data},    {TLS_TYPE, print_csv_data},
+    {GEO_LOCATION, print_csv_data}, {MIME_TYPE, print_csv_data},       {TLS_TYPE, print_csv_data},
 };
 
 /* Get a panel from the GCSVPanel structure given a module.
