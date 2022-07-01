@@ -57,7 +57,7 @@
 #include "gstorage.h"
 #include "pdjson.h"
 #include "util.h"
-#include "websocket.h"
+#include "websocket/websocket.h"
 #include "xmalloc.h"
 
 /* Allocate memory for a new GRawData instance.

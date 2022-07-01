@@ -66,12 +66,12 @@
 #include "gdns.h"
 #include "gholder.h"
 #include "goaccess.h"
-#include "gwsocket.h"
+#include "websocket/gwsocket.h"
 #include "json.h"
 #include "options.h"
 #include "output.h"
 #include "util.h"
-#include "websocket.h"
+#include "websocket/websocket.h"
 #include "xmalloc.h"
 
 GConf conf;

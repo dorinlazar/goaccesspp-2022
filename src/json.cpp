@@ -51,7 +51,7 @@
 #include "settings.h"
 #include "ui.h"
 #include "util.h"
-#include "websocket.h"
+#include "websocket/websocket.h"
 #include "xmalloc.h"
 
 typedef struct GPanel_ {
