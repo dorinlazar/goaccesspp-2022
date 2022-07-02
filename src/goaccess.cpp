@@ -1352,8 +1352,6 @@ static Logs* initializer(void) {
   if (!(logs = init_logs(conf.filenames_idx)))
     FATAL(ERR_NO_DATA_PASSED);
 
-  set_signal_data(logs);
-
   for (i = 0; i < logs->size; ++i)
     if (logs->glog[i].filename[0] == '-' && logs->glog[i].filename[1] == '\0')
       logs->glog[i].pipe = pipe;
