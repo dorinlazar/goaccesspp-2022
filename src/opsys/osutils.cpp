@@ -4,6 +4,7 @@
 #include <grp.h>
 #include <unistd.h>
 #include <cstring>
+#include <libintl.h>
 
 #include "error.hpp"
 
@@ -29,6 +30,23 @@ void SwitchToUser(const std::string& username) {
   if (setuid(pw->pw_uid) == -1) {
     FATAL("setuid: {}", ::strerror(errno));
   }
+}
+
+/* Set locale */
+void UpdateLocale(void) {
+  char* loc_ctype;
+
+  setlocale(LC_ALL, "");
+  bindtextdomain("goaccesspp", "/usr/share/locale");
+  textdomain("goaccesspp");
+
+  loc_ctype = getenv("LC_CTYPE");
+  if (loc_ctype != NULL)
+    setlocale(LC_CTYPE, loc_ctype);
+  else if ((loc_ctype = getenv("LC_ALL")))
+    setlocale(LC_CTYPE, loc_ctype);
+  else
+    setlocale(LC_CTYPE, "");
 }
 
 } // namespace goapp::opsys

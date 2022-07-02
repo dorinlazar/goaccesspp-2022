@@ -53,7 +53,6 @@
 #include <inttypes.h>
 
 #include "gkhash.h"
-#include "geoip1.h"
 #include "browsers.h"
 #include "csv.h"
 #include "error.hpp"
@@ -71,6 +70,7 @@
 
 // ------------------
 #include "opsys/osutils.hpp"
+#include "geo/geoip1.h"
 // ------------------
 
 GConf conf;
@@ -1172,23 +1172,6 @@ static void curses_output(Logs* logs) {
   get_keys(logs);
 }
 
-/* Set locale */
-static void set_locale(void) {
-  char* loc_ctype;
-
-  setlocale(LC_ALL, "");
-  bindtextdomain("goaccesspp", "/usr/share/locale");
-  textdomain("goaccesspp");
-
-  loc_ctype = getenv("LC_CTYPE");
-  if (loc_ctype != NULL)
-    setlocale(LC_CTYPE, loc_ctype);
-  else if ((loc_ctype = getenv("LC_ALL")))
-    setlocale(LC_CTYPE, loc_ctype);
-  else
-    setlocale(LC_CTYPE, "");
-}
-
 /* Attempt to get the current name of a terminal or fallback to /dev/tty
  *
  * On error, -1 is returned
@@ -1326,7 +1309,7 @@ static Logs* initializer(void) {
   /* then initialize modules and set */
   gscroll.current = (GModule)init_modules();
   /* setup to use the current locale */
-  set_locale();
+  goapp::opsys::UpdateLocale();
 
   parse_browsers_file();
 

@@ -44,7 +44,7 @@
 #include "util.h"
 #include "xmalloc.h"
 
-#include "geoip1.h"
+#include "geo/geoip1.h"
 
 typedef struct GHolderPanel_ {
   GModule module;

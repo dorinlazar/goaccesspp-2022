@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 
 #define MTRC_ID_COUNTRY 0
 #define MTRC_ID_CITY 1

@@ -36,7 +36,7 @@
 #include <string.h>
 
 #include "gstorage.h"
-#include "geoip1.h"
+#include "geo/geoip1.h"
 #include "browsers.h"
 #include "commons.h"
 #include "error.hpp"
