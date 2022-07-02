@@ -548,17 +548,17 @@ static int extract_tls_version_cipher(char* tkn, char** cipher, char** tls_versi
 
   code = strtoull(tkn, &bEnd, 10);
   if (tkn == bEnd || *bEnd != '\0' || errno == ERANGE) {
-    LOG_DEBUG(("unable to convert cipher code to a valid decimal."));
+    Log::Debug("unable to convert cipher code to a valid decimal.");
     goto fail;
   }
 
   /* ssl context */
   if (!(ctx = SSL_CTX_new(SSLv23_server_method()))) {
-    LOG_DEBUG(("Unable to create a new SSL_CTX_new to extact TLS."));
+    Log::Debug("Unable to create a new SSL_CTX_new to extact TLS.");
     goto fail;
   }
   if (!(ssl = SSL_new(ctx))) {
-    LOG_DEBUG(("Unable to create a new instace of SSL_new to extact TLS."));
+    Log::Debug("Unable to create a new instace of SSL_new to extact TLS.");
     goto fail;
   }
 
@@ -567,12 +567,12 @@ static int extract_tls_version_cipher(char* tkn, char** cipher, char** tls_versi
   cipherid[2] = 0;
 
   if (!(c = SSL_CIPHER_find(ssl, cipherid))) {
-    LOG_DEBUG(("Unable to find cipher to extact TLS."));
+    Log::Debug("Unable to find cipher to extact TLS.");
     goto fail;
   }
 
   if (!(sn = SSL_CIPHER_standard_name(c))) {
-    LOG_DEBUG(("Unable to get cipher standard name to extact TLS."));
+    Log::Debug("Unable to get cipher standard name to extact TLS.");
     goto fail;
   }
   *cipher = xstrdup(sn);

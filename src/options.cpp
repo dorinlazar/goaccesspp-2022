@@ -413,7 +413,7 @@ static void parse_long_opt(const char* name, const char* oarg) {
   if (!strcmp("port", name)) {
     int port = strtol(oarg, NULL, 10);
     if (port < 0 || port > 65535)
-      LOG_DEBUG(("Invalid port."));
+      Log::Debug("Invalid port.");
     else
       conf.port = oarg;
   }
@@ -455,13 +455,13 @@ static void parse_long_opt(const char* name, const char* oarg) {
   /* invalid requests */
   if (!strcmp("invalid-requests", name)) {
     conf.invalid_requests_log = oarg;
-    invalid_log_open(conf.invalid_requests_log);
+    Log::OpenLogInvalidsFile(conf.invalid_requests_log);
   }
 
   /* unknowns */
   if (!strcmp("unknowns-log", name)) {
     conf.unknowns_log = oarg;
-    unknowns_log_open(conf.unknowns_log);
+    Log::OpenLogUnknownsFile(conf.unknowns_log);
   }
 
   /* output file */
@@ -544,7 +544,7 @@ static void parse_long_opt(const char* name, const char* oarg) {
     else if (!strcmp("panel", oarg))
       conf.ignore_statics = IGNORE_LEVEL_PANEL;
     else
-      LOG_DEBUG(("Invalid statics ignore option."));
+      Log::Debug("Invalid statics ignore option.");
   }
 
   /* number of line tests */
@@ -678,7 +678,7 @@ void read_option_args(int argc, char** argv) {
       if (conf.ignore_ip_idx < MAX_IGNORE_IPS)
         conf.ignore_ips[conf.ignore_ip_idx++] = optarg;
       else
-        LOG_DEBUG(("Max num of (%d) IPs to ignore reached.", MAX_IGNORE_IPS));
+        Log::Debug("Max num of ({}) IPs to ignore reached.", MAX_IGNORE_IPS);
       break;
     case 'a': conf.list_agents = 1; break;
     case 'b': conf.browsers_file = optarg; break;
@@ -693,7 +693,7 @@ void read_option_args(int argc, char** argv) {
       break;
     case 'l':
       conf.debug_log = optarg;
-      dbg_log_open(conf.debug_log);
+      Log::OpenLogDebugFile(conf.debug_log);
       break;
     case 'r': conf.skip_term_resolver = 1; break;
     case 'd': conf.enable_html_resolver = 1; break;

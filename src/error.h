@@ -43,10 +43,87 @@
 #include <iostream>
 #include <source_location>
 #include <fmt/format.h>
+#include <memory>
 
-template <typename FormatArg, typename... Args>
+class Log {
+  struct LogWriter {
+    const int DEBUG_TEST = 0;
+    std::unique_ptr<std::ostream> m_access;
+    std::unique_ptr<std::ostream> m_debug;
+    std::unique_ptr<std::ostream> m_invalids;
+    std::unique_ptr<std::ostream> m_unknowns;
+
+    template <typename... Args>
+    inline void Access(const char* fmtarg, Args&&... args) {
+      if (m_access) {
+        Perform(*m_access, fmtarg, args...);
+      }
+    }
+    template <typename... Args>
+    inline void Debug(const char* fmtarg, Args&&... args) {
+      if (m_debug) {
+        Perform(*m_debug, fmtarg, args...);
+      }
+    }
+    template <typename... Args>
+    inline void Invalids(const char* fmtarg, Args&&... args) {
+      if (m_invalids) {
+        Perform(*m_invalids, fmtarg, args...);
+      }
+    }
+    template <typename... Args>
+    inline void Unknowns(const char* fmtarg, Args&&... args) {
+      if (m_unknowns) {
+        Perform(*m_unknowns, fmtarg, args...);
+      }
+    }
+    template <typename... Args>
+    inline void Trace(const char* fmtarg, Args&&... args) {
+      if (DEBUG_TEST) {
+        Perform(std::cerr, fmtarg, args...);
+      }
+    }
+
+  private:
+    template <typename... Args>
+    static inline void Perform(std::ostream& os, const char* fmtarg, Args&&... args) {
+      os << fmt::vformat(fmtarg, fmt::make_format_args(args...)) << "\n";
+    }
+  };
+  static LogWriter m_log_writer;
+
+public:
+  template <typename... Args>
+  static inline void Access(const char* fmtarg, Args&&... args) {
+    m_log_writer.Access(fmtarg, args...);
+  }
+  template <typename... Args>
+  static inline void Debug(const char* fmtarg, Args&&... args) {
+    m_log_writer.Debug(fmtarg, args...);
+  }
+  template <typename... Args>
+  static inline void Invalids(const char* fmtarg, Args&&... args) {
+    m_log_writer.Invalids(fmtarg, args...);
+  }
+  template <typename... Args>
+  static inline void Unknowns(const char* fmtarg, Args&&... args) {
+    m_log_writer.Unknowns(fmtarg, args...);
+  }
+  template <typename... Args>
+  static inline void Trace(const char* fmtarg, Args&&... args) {
+    m_log_writer.Trace(fmtarg, args...);
+  }
+
+  static void OpenLogAccessFile(const std::string& filename);
+  static void OpenLogDebugFile(const std::string& filename);
+  static void OpenLogInvalidsFile(const std::string& filename);
+  static void OpenLogUnknownsFile(const std::string& filename);
+  static void CloseLogFiles();
+};
+
+template <typename... Args>
 struct FATAL {
-  [[noreturn]] FATAL(const FormatArg& fmtarg, Args&&... args,
+  [[noreturn]] FATAL(const char* fmtarg, Args&&... args,
                      const std::source_location& loc = std::source_location::current()) {
     (void)endwin();
     std::cerr << fmt::format("\nGoAccess - version {} - {}T{}\n", GO_VERSION, __DATE__, __TIME__);
@@ -63,52 +140,10 @@ struct FATAL {
 
 // https://en.cppreference.com/w/cpp/language/class_template_argument_deduction#User-defined_deduction_guides
 template <typename... Args>
-FATAL(Args&&...) -> FATAL<Args...>;
+FATAL(const char*, Args&&...) -> FATAL<Args...>;
 
-/* access requests log */
-#define ACCESS_LOG(x, ...)                                                                                             \
-  do {                                                                                                                 \
-    access_fprintf x;                                                                                                  \
-  } while (0)
-/* debug log */
-#define LOG_DEBUG(x, ...)                                                                                              \
-  do {                                                                                                                 \
-    dbg_fprintf x;                                                                                                     \
-  } while (0)
-/* invalid requests log */
-#define LOG_INVALID(x, ...)                                                                                            \
-  do {                                                                                                                 \
-    invalid_fprintf x;                                                                                                 \
-  } while (0)
-/* unknown browser log */
-#define LOG_UNKNOWNS(x, ...)                                                                                           \
-  do {                                                                                                                 \
-    unknowns_fprintf x;                                                                                                \
-  } while (0)
-
-#define DEBUG_TEST 0
-/* log debug wrapper */
-#define LOG(x)                                                                                                         \
-  do {                                                                                                                 \
-    if (DEBUG_TEST)                                                                                                    \
-      dbg_printf x;                                                                                                    \
-  } while (0)
-
-int access_log_open(const char* path);
-void access_fprintf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
-void access_log_close(void);
-void dbg_fprintf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
-void dbg_log_close(void);
-void dbg_log_open(const char* file);
-void dbg_printf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
-void invalid_fprintf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
-void unknowns_fprintf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
-void invalid_log_close(void);
-void invalid_log_open(const char* path);
 void set_signal_data(void* p);
 void setup_sigsegv_handler(void);
 void sigsegv_handler(int sig);
-void unknowns_log_close(void);
-void unknowns_log_open(const char* path);
 
 #endif

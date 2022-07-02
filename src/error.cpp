@@ -40,83 +40,58 @@
 #include "error.h"
 #include "labels.h"
 #include "parser.h"
+#include <fstream>
 
-static FILE* access_log;
-static FILE* log_file;
-static FILE* log_invalid;
-static FILE* log_unknowns;
+Log::LogWriter Log::m_log_writer;
+
+void Log::OpenLogAccessFile(const std::string& filename) {
+  auto ptr = std::make_unique<std::ofstream>(filename, std::ios::out | std::ios::binary | std::ios::app);
+  if (ptr->is_open()) {
+    m_log_writer.m_access = std::move(ptr);
+  } else {
+    Trace("Unable to open access file [{}]: {} ", filename, ::strerror(errno));
+  }
+}
+
+void Log::OpenLogDebugFile(const std::string& filename) {
+  auto ptr = std::make_unique<std::ofstream>(filename, std::ios::out | std::ios::binary | std::ios::trunc);
+  if (ptr->is_open()) {
+    m_log_writer.m_debug = std::move(ptr);
+  } else {
+    Trace("Unable to open debug file [{}]: {} ", filename, ::strerror(errno));
+  }
+}
+
+void Log::OpenLogInvalidsFile(const std::string& filename) {
+  auto ptr = std::make_unique<std::ofstream>(filename, std::ios::out | std::ios::binary | std::ios::trunc);
+  if (ptr->is_open()) {
+    m_log_writer.m_invalids = std::move(ptr);
+  } else {
+    Trace("Unable to open invalids file [{}]: {} ", filename, ::strerror(errno));
+  }
+}
+
+void Log::OpenLogUnknownsFile(const std::string& filename) {
+  auto ptr = std::make_unique<std::ofstream>(filename, std::ios::out | std::ios::binary | std::ios::trunc);
+  if (ptr->is_open()) {
+    m_log_writer.m_unknowns = std::move(ptr);
+  } else {
+    Trace("Unable to open unknowns file [{}]: {} ", filename, ::strerror(errno));
+  }
+}
+
+void Log::CloseLogFiles() {
+  m_log_writer.m_access.reset();
+  m_log_writer.m_debug.reset();
+  m_log_writer.m_invalids.reset();
+  m_log_writer.m_unknowns.reset();
+}
+
 static Logs* log_data;
 static struct sigaction old_sigsegv_handler;
 
-/* Open a debug file whose name is specified in the given path. */
-void dbg_log_open(const char* path) {
-  if (path != NULL) {
-    log_file = fopen(path, "w");
-    if (log_file == NULL)
-      return;
-  }
-}
-
-/* Close the debug file. */
-void dbg_log_close(void) {
-  if (log_file != NULL)
-    fclose(log_file);
-}
-
-/* Open the invalid requests log file whose name is specified in the
- * given path. */
-void invalid_log_open(const char* path) {
-  if (path != NULL) {
-    log_invalid = fopen(path, "w");
-    if (log_invalid == NULL)
-      return;
-  }
-}
-
-/* Close the invalid requests log file. */
-void invalid_log_close(void) {
-  if (log_invalid != NULL)
-    fclose(log_invalid);
-}
-
-/* Open the unknowns log file whose name is specified in the
- * given path. */
-void unknowns_log_open(const char* path) {
-  if (path != NULL) {
-    log_unknowns = fopen(path, "w");
-    if (log_unknowns == NULL)
-      return;
-  }
-}
-
-/* Close the unknowns log file. */
-void unknowns_log_close(void) {
-  if (log_unknowns != NULL)
-    fclose(log_unknowns);
-}
-
 /* Set current overall parsed log data. */
 void set_signal_data(void* p) { log_data = (Logs*)p; }
-
-/* Open the WebSocket access log file whose name is specified in the
- * given path. */
-int access_log_open(const char* path) {
-  if (path == NULL)
-    return 0;
-
-  access_log = fopen(path, "a");
-
-  if (access_log == NULL)
-    return 1;
-
-  return 0;
-}
-
-/* Close the WebSocket access log file. */
-void access_log_close(void) {
-  if (access_log != NULL)
-    fclose(access_log);
-}
 
 /* Set up sigsegv handler. */
 void setup_sigsegv_handler(void) {
@@ -184,64 +159,4 @@ void sigsegv_handler(int sig) {
 
   /* Call old sigsegv handler; may be default exit or third party one (e.g. ASAN) */
   sigaction(SIGSEGV, &old_sigsegv_handler, NULL);
-}
-
-/* Write formatted debug log data to the logfile. */
-void dbg_fprintf(const char* fmt, ...) {
-  va_list args;
-
-  if (!log_file)
-    return;
-
-  va_start(args, fmt);
-  vfprintf(log_file, fmt, args);
-  fflush(log_file);
-  va_end(args);
-}
-
-/* Write formatted invalid requests log data to the logfile. */
-void invalid_fprintf(const char* fmt, ...) {
-  va_list args;
-
-  if (!log_invalid)
-    return;
-
-  va_start(args, fmt);
-  vfprintf(log_invalid, fmt, args);
-  fflush(log_invalid);
-  va_end(args);
-}
-
-/* Write formatted unknown browsers/OSs log data to the logfile. */
-void unknowns_fprintf(const char* fmt, ...) {
-  va_list args;
-
-  if (!log_unknowns)
-    return;
-
-  va_start(args, fmt);
-  vfprintf(log_unknowns, fmt, args);
-  fflush(log_unknowns);
-  va_end(args);
-}
-
-/* Debug otuput */
-void dbg_printf(const char* fmt, ...) {
-  va_list args;
-  va_start(args, fmt);
-  vfprintf(stderr, fmt, args);
-  va_end(args);
-}
-
-/* Write formatted access log data to the logfile. */
-void access_fprintf(const char* fmt, ...) {
-  va_list args;
-
-  if (!access_log)
-    return;
-
-  va_start(args, fmt);
-  vfprintf(access_log, fmt, args);
-  fflush(access_log);
-  va_end(args);
 }

@@ -65,7 +65,7 @@ static GeoIP* geoip_open_db(const char* db) {
     FATAL("Unable to open GeoIP database: {}\n", db);
 
   GeoIP_set_charset(geoip, GEOIP_CHARSET_UTF8);
-  LOG_DEBUG(("Opened GeoIP City database: %s\n", db));
+  Log::Debug("Opened GeoIP City database: {}", db);
 
   return geoip;
 }

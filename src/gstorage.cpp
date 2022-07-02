@@ -524,7 +524,7 @@ static void count_invalid(GLog* glog, const char* line) {
   ht_inc_cnt_overall("failed_requests", 1);
 
   if (conf.invalid_requests_log) {
-    LOG_INVALID(("%s", line));
+    Log::Invalids("{}", line);
   }
 
   if (glog->items->errstr && glog->log_erridx < MAX_LOG_ERRORS) {

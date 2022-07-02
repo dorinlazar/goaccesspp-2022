@@ -224,7 +224,7 @@ static GHTML* panel_lookup(GModule module) {
 /* Sanitize output with html entities for special chars */
 static void clean_output(FILE* fp, const char* s) {
   if (!s) {
-    LOG_DEBUG(("NULL data on clean_output.\n"));
+    Log::Debug("NULL data on clean_output.");
     return;
   }
 

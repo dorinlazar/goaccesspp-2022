@@ -440,7 +440,7 @@ char* get_visitors_date(const char* odate, const char* from, const char* to) {
   if (convert_date(date, odate, from, to, DATE_TIME) == 0)
     return xstrdup(date);
 
-  LOG_DEBUG(("invalid date: %s", odate));
+  Log::Debug("invalid date: {}", odate);
   return xstrdup("---");
 }
 
@@ -459,7 +459,7 @@ static void set_tz(void) {
 
   snprintf(tz, TZ_NAME_LEN, "TZ=%s", conf.tz_name);
   if ((putenv(tz)) != 0) {
-    LOG_DEBUG(("Can't set TZ env variable %s: %s\n", tz, strerror(errno)));
+    Log::Debug("Can't set TZ env variable {}: {}", tz, strerror(errno));
     return;
   }
   tzset();
@@ -520,7 +520,7 @@ int str_to_time(const char* str, const char* fmt, struct tm* tm) {
     return 0;
 
   if ((t = tm2time(tm)) == -1) {
-    LOG_DEBUG(("Can't set time via tm2time() %s: %s\n", str, strerror(errno)));
+    Log::Debug("Can't set time via tm2time() {}: {}", str, strerror(errno));
     return 0;
   }
 
@@ -593,7 +593,7 @@ off_t file_size(const char* filename) {
   if (stat(filename, &st) == 0)
     return st.st_size;
 
-  LOG_DEBUG(("Can't determine size of %s: %s\n", filename, strerror(errno)));
+  Log::Debug("Can't determine size of {}: {}", filename, strerror(errno));
 
   return -1;
 }
@@ -766,7 +766,7 @@ int ptr2int(char* ptr) {
 
   value = strtol(ptr, &sEnd, 10);
   if (ptr == sEnd || *sEnd != '\0' || errno == ERANGE) {
-    LOG_DEBUG(("Invalid parse of integer value from pointer. \n"));
+    Log::Debug("Invalid parse of integer value from pointer. ");
     return -1;
   }
 

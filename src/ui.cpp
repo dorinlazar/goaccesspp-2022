@@ -119,7 +119,7 @@ void set_input_opts(void) {
   intrflush(stdscr, FALSE);
   keypad(stdscr, TRUE);
   if (curs_set(0) == ERR)
-    LOG_DEBUG(("Unable to change cursor: %s\n", strerror(errno)));
+    Log::Debug("Unable to change cursor: {}", strerror(errno));
 
   if (conf.mouse_support)
     mousemask(BUTTON1_CLICKED, NULL);

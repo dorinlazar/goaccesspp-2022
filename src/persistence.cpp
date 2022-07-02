@@ -844,7 +844,7 @@ static char* check_restore_path(const char* fn) {
   if (access(path, F_OK) != -1)
     return path;
 
-  LOG_DEBUG(("DB file %s doesn't exist. %s\n", path, strerror(errno)));
+  Log::Debug("DB file {} doesn't exist. {}", path, strerror(errno));
   free(path);
   return NULL;
 }

@@ -145,7 +145,7 @@ char* get_config_file_path(void) {
     free(upath);
     return rpath;
   }
-  LOG_DEBUG(("Unable to find user's config file %s %s", upath, strerror(errno)));
+  Log::Debug("Unable to find user's config file {} {}", upath, strerror(errno));
   free(upath);
 
   /* otherwise, fallback to global config file, e.g.,%sysconfdir%/goaccess.conf */
@@ -154,7 +154,7 @@ char* get_config_file_path(void) {
     free(gpath);
     return rpath;
   }
-  LOG_DEBUG(("Unable to find global config file %s %s", gpath, strerror(errno)));
+  Log::Debug("Unable to find global config file {} {}", gpath, strerror(errno));
   free(gpath);
 
   return NULL;
@@ -777,7 +777,7 @@ void set_date_format_str(const char* oarg) {
 
   /* attempt to get the format string by the enum value */
   if ((fmt = get_selected_date_str(type)) == NULL) {
-    LOG_DEBUG(("Unable to set date format from enum: %s\n", oarg));
+    Log::Debug("Unable to set date format from enum: {}", oarg);
     return;
   }
 
@@ -803,7 +803,7 @@ void set_time_format_str(const char* oarg) {
 
   /* attempt to get the format string by the enum value */
   if ((fmt = get_selected_time_str(type)) == NULL) {
-    LOG_DEBUG(("Unable to set time format from enum: %s\n", oarg));
+    Log::Debug("Unable to set time format from enum: {}", oarg);
     return;
   }
 
@@ -853,7 +853,7 @@ void set_log_format_str(const char* oarg) {
 
   /* attempt to get the format string by the enum value */
   if ((fmt = get_selected_format_str(type)) == NULL) {
-    LOG_DEBUG(("Unable to set log format from enum: %s\n", oarg));
+    Log::Debug("Unable to set log format from enum: {}", oarg);
     return;
   }
 

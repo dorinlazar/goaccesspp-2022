@@ -168,7 +168,7 @@ int read_fifo(GWSReader* gwsreader, void (*f)(int)) {
   if (fds[0].revents & POLLIN)
     return 1;
   if (!(fds[1].revents & POLLIN)) {
-    LOG(("No file descriptor set on read_message()\n"));
+    Log::Trace("No file descriptor set on read_message()");
     return 0;
   }
 
@@ -288,7 +288,7 @@ void stop_ws_server(GWSWriter* gwswriter, GWSReader* gwsreader) {
 
   pthread_mutex_lock(&gwsreader->mutex);
   if ((write(gwsreader->self_pipe[1], "x", 1)) == -1 && errno != EAGAIN)
-    LOG(("Unable to write to self pipe on pipeout.\n"));
+    Log::Trace("Unable to write to self pipe on pipeout.");
   pthread_mutex_unlock(&gwsreader->mutex);
 
   /* if it fails to write, force stop */
@@ -299,11 +299,11 @@ void stop_ws_server(GWSWriter* gwswriter, GWSReader* gwsreader) {
 
   reader = gwsreader->thread;
   if (pthread_join(reader, NULL) != 0)
-    LOG(("Unable to join thread gwsreader: %s\n", strerror(errno)));
+    Log::Trace("Unable to join thread gwsreader: {}", strerror(errno));
 
   writer = gwswriter->thread;
   if (pthread_join(writer, NULL) != 0)
-    LOG(("Unable to join thread gwswriter: %s\n", strerror(errno)));
+    Log::Trace("Unable to join thread gwswriter: {}", strerror(errno));
 }
 
 /* Start the WebSocket server and initialize default options. */

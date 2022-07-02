@@ -341,7 +341,7 @@ static void parse_browser_token(char*** list, char* line, int n) {
   val = trim_str(val);
 
   if (is_dup(list, conf.browsers_hash_idx, line)) {
-    LOG_INVALID(("Duplicate browser entry: %s", line));
+    Log::Invalids("Duplicate browser entry: {}", line);
     return;
   }
 
@@ -557,7 +557,7 @@ char* verify_browser(char* str, char* type) {
   }
 
   if (conf.unknowns_log)
-    LOG_UNKNOWNS(("%-7s%s\n", "[BR]", str));
+    Log::Unknowns("{:<7}{}", "[BR]", str);
 
   xstrncpy(type, "Unknown", BROWSER_TYPE_LEN);
 

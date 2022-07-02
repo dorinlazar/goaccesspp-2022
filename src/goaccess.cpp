@@ -146,25 +146,12 @@ static void house_keeping(void) {
   /* GEOLOCATION */
   geoip_free();
 
-  /* INVALID REQUESTS */
-  if (conf.invalid_requests_log) {
-    LOG_DEBUG(("Closing invalid requests log.\n"));
-    invalid_log_close();
-  }
-
-  /* UNKNOWNS */
-  if (conf.unknowns_log) {
-    LOG_DEBUG(("Closing unknowns log.\n"));
-    unknowns_log_close();
-  }
-
   /* CONFIGURATION */
   free_formats();
   free_browsers_hash();
-  if (conf.debug_log) {
-    LOG_DEBUG(("Bye.\n"));
-    dbg_log_close();
-  }
+
+  Log::CloseLogFiles();
+
   if (conf.fifo_in)
     free((char*)conf.fifo_in);
   if (conf.fifo_out)
@@ -253,21 +240,21 @@ static void daemonize(void) {
   /* attempt to create our own process group */
   sid = setsid();
   if (sid < 0) {
-    LOG_DEBUG(("Unable to setsid: %s.\n", strerror(errno)));
+    Log::Debug("Unable to setsid: {}.", strerror(errno));
     exit(EXIT_FAILURE);
   }
 
   /* set the working directory to the root directory.
    * requires the user to specify absolute paths */
   if (chdir("/") < 0) {
-    LOG_DEBUG(("Unable to set chdir: %s.\n", strerror(errno)));
+    Log::Debug("Unable to set chdir: {}.", strerror(errno));
     exit(EXIT_FAILURE);
   }
 
   /* redirect fd's 0,1,2 to /dev/null */
   /* Note that the user will need to use --debug-file for log output */
   if ((fd = open("/dev/null", O_RDWR, 0)) == -1) {
-    LOG_DEBUG(("Unable to open /dev/null: %s.\n", strerror(errno)));
+    Log::Debug("Unable to open /dev/null: {}.", strerror(errno));
     exit(EXIT_FAILURE);
   }
 
@@ -287,7 +274,7 @@ static void allocate_holder_by_module(GModule module) {
   /* extract data from the corresponding hash table */
   raw_data = parse_raw_data(module);
   if (!raw_data) {
-    LOG_DEBUG(("raw data is NULL for module: %d.\n", module));
+    Log::Debug("raw data is NULL for module: {}.", module);
     return;
   }
 
@@ -1416,7 +1403,7 @@ static int spawn_ws(void) {
 
   /* open fifo for read */
   if ((gwsreader->fd = open_fifoout()) == -1) {
-    LOG(("Unable to open FIFO for read.\n"));
+    Log::Trace("Unable to open FIFO for read.");
     return 1;
   }
 

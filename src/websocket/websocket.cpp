@@ -591,10 +591,6 @@ void ws_stop(WSServer* server) {
   ws_clear_pipein(*pipein);
   ws_clear_pipeout(*pipeout);
 
-  /* close access log (if any) */
-  if (wsconfig.accesslog)
-    access_log_close();
-
   /* remove dangling clients */
   if (list_count(server->colist) > 0)
     list_foreach(server->colist, ws_remove_dangling_clients, NULL);
@@ -673,7 +669,7 @@ static int initialize_ssl_ctx(WSServer* server) {
 out:
   if (ret) {
     SSL_CTX_free(ctx);
-    LOG(("Error: %s\n", ERR_error_string(ERR_get_error(), NULL)));
+    Log::Trace("Error: {}", ERR_error_string(ERR_get_error(), NULL));
   }
 
   return ret;
@@ -685,43 +681,43 @@ static void log_return_message(int ret, int err, const char* fn) {
 
   switch (err) {
   case SSL_ERROR_NONE:
-    LOG(("SSL: %s -> SSL_ERROR_NONE\n", fn));
-    LOG(("SSL: TLS/SSL I/O operation completed\n"));
+    Log::Trace("SSL: {} -> SSL_ERROR_NONE", fn);
+    Log::Trace("SSL: TLS/SSL I/O operation completed");
     break;
   case SSL_ERROR_WANT_READ:
-    LOG(("SSL: %s -> SSL_ERROR_WANT_READ\n", fn));
-    LOG(("SSL: incomplete, data available for reading\n"));
+    Log::Trace("SSL: {} -> SSL_ERROR_WANT_READ", fn);
+    Log::Trace("SSL: incomplete, data available for reading");
     break;
   case SSL_ERROR_WANT_WRITE:
-    LOG(("SSL: %s -> SSL_ERROR_WANT_WRITE\n", fn));
-    LOG(("SSL: incomplete, data available for writing\n"));
+    Log::Trace("SSL: {} -> SSL_ERROR_WANT_WRITE", fn);
+    Log::Trace("SSL: incomplete, data available for writing");
     break;
   case SSL_ERROR_ZERO_RETURN:
-    LOG(("SSL: %s -> SSL_ERROR_ZERO_RETURN\n", fn));
-    LOG(("SSL: TLS/SSL connection has been closed\n"));
+    Log::Trace("SSL: {} -> SSL_ERROR_ZERO_RETURN", fn);
+    Log::Trace("SSL: TLS/SSL connection has been closed");
     break;
-  case SSL_ERROR_WANT_X509_LOOKUP: LOG(("SSL: %s -> SSL_ERROR_WANT_X509_LOOKUP\n", fn)); break;
+  case SSL_ERROR_WANT_X509_LOOKUP: Log::Trace("SSL: {} -> SSL_ERROR_WANT_X509_LOOKUP", fn); break;
   case SSL_ERROR_SYSCALL:
-    LOG(("SSL: %s -> SSL_ERROR_SYSCALL\n", fn));
+    Log::Trace("SSL: {} -> SSL_ERROR_SYSCALL", fn);
 
     e = ERR_get_error();
     if (e > 0)
-      LOG(("SSL: %s -> %s\n", fn, ERR_error_string(e, NULL)));
+      Log::Trace("SSL: {} -> {}", fn, ERR_error_string(e, NULL));
 
     /* call was not successful because a fatal error occurred either at the
      * protocol level or a connection failure occurred. */
     if (ret != 0) {
-      LOG(("SSL bogus handshake interrupt: %s\n", strerror(errno)));
+      Log::Trace("SSL bogus handshake interrupt: {}", strerror(errno));
       break;
     }
     /* call not yet finished. */
-    LOG(("SSL: handshake interrupted, got EOF\n"));
+    Log::Trace("SSL: handshake interrupted, got EOF");
     if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN)
-      LOG(("SSL: %s -> not yet finished %s\n", fn, strerror(errno)));
+      Log::Trace("SSL: {} -> not yet finished {}", fn, strerror(errno));
     break;
   default:
-    LOG(("SSL: %s -> failed fatal error code: %d\n", fn, err));
-    LOG(("SSL: %s\n", ERR_error_string(ERR_get_error(), NULL)));
+    Log::Trace("SSL: {} -> failed fatal error code: {}", fn, err);
+    Log::Trace("SSL: {}", ERR_error_string(ERR_get_error(), NULL));
     break;
   }
 }
@@ -746,13 +742,13 @@ static int shutdown_ssl(WSClient* client) {
   case SSL_ERROR_WANT_WRITE: client->sslstatus = WS_TLS_SHUTTING; break;
   case SSL_ERROR_SYSCALL:
     if (ret == 0) {
-      LOG(("SSL: SSL_shutdown, connection unexpectedly closed by peer.\n"));
+      Log::Trace("SSL: SSL_shutdown, connection unexpectedly closed by peer.");
       /* The shutdown is not yet finished. */
       if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN)
         client->sslstatus = WS_TLS_SHUTTING;
       break;
     }
-    LOG(("SSL: SSL_shutdown, probably unrecoverable, forcing close.\n"));
+    Log::Trace("SSL: SSL_shutdown, probably unrecoverable, forcing close.");
     /* FALLTHRU */
   case SSL_ERROR_ZERO_RETURN:
   case SSL_ERROR_WANT_X509_LOOKUP:
@@ -807,18 +803,18 @@ static void handle_accept_ssl(WSClient* client, WSServer* server) {
   /* attempt to create SSL connection if we don't have one yet */
   if (!client->ssl) {
     if (!(client->ssl = SSL_new(server->ctx))) {
-      LOG(("SSL: SSL_new, new SSL structure failed.\n"));
+      Log::Trace("SSL: SSL_new, new SSL structure failed.");
       return;
     }
     if (!SSL_set_fd(client->ssl, client->listener)) {
-      LOG(("SSL: unable to set file descriptor\n"));
+      Log::Trace("SSL: unable to set file descriptor");
       return;
     }
   }
 
   /* attempt to initiate the TLS/SSL handshake */
   if (accept_ssl(client) == 0) {
-    LOG(("SSL Accepted: %d %s\n", client->listener, client->remote_ip));
+    Log::Trace("SSL Accepted: {} {}", client->listener, client->remote_ip);
   }
 }
 
@@ -956,7 +952,7 @@ static int accept_client(int listener, GSLList** colist) {
     FATAL("Unable to set accept: %s.", strerror(errno));
 
   if (newfd == -1) {
-    LOG(("Unable to accept: %s.", strerror(errno)));
+    Log::Trace("Unable to accept: {}.", strerror(errno));
     return newfd;
   }
   src = ws_get_raddr((struct sockaddr*)&raddr);
@@ -1389,17 +1385,17 @@ static void access_log(WSClient* client, int status_code) {
   ref = escape_http_request(hdrs->referer);
   ua = escape_http_request(hdrs->agent);
 
-  ACCESS_LOG(("%s ", client->remote_ip));
-  ACCESS_LOG(("- - "));
-  ACCESS_LOG(("%s ", buf));
-  ACCESS_LOG(("\"%s ", hdrs->method));
-  ACCESS_LOG(("%s ", req ? req : "-"));
-  ACCESS_LOG(("%s\" ", hdrs->protocol));
-  ACCESS_LOG(("%d ", status_code));
-  ACCESS_LOG(("%d ", hdrs->buflen));
-  ACCESS_LOG(("\"%s\" ", ref ? ref : "-"));
-  ACCESS_LOG(("\"%s\" ", ua ? ua : "-"));
-  ACCESS_LOG(("%u\n", elapsed));
+  Log::Access("{} ", client->remote_ip);
+  Log::Access("- - ");
+  Log::Access("{} ", buf);
+  Log::Access("\"{} ", hdrs->method);
+  Log::Access("{} ", req ? req : "-");
+  Log::Access("{}\" ", hdrs->protocol);
+  Log::Access("{} ", status_code);
+  Log::Access("{} ", hdrs->buflen);
+  Log::Access("\"{}\" ", ref ? ref : "-");
+  Log::Access("\"{}\" ", ua ? ua : "-");
+  Log::Access("{}", elapsed);
 
   if (req)
     free(req);
@@ -1501,10 +1497,10 @@ static int ws_get_handshake(WSClient* client, WSServer* server) {
   /* Probably the connection was closed before finishing handshake */
   if ((bytes = read_socket(client, buf + readh, WS_MAX_HEAD_SZ - readh)) < 1) {
     if (client->status & WS_CLOSE) {
-      LOG(("Connection aborted %d [%s]...\n", client->listener, client->remote_ip));
+      Log::Trace("Connection aborted {} [{}]...", client->listener, client->remote_ip);
       http_error(client, WS_BAD_REQUEST_STR);
     }
-    LOG(("Can't establish handshake %d [%s]...\n", client->listener, client->remote_ip));
+    Log::Trace("Can't establish handshake {} [{}]...", client->listener, client->remote_ip);
     return ws_set_status(client, WS_CLOSE, bytes);
   }
   client->headers->buflen += bytes;
@@ -1514,25 +1510,25 @@ static int ws_get_handshake(WSClient* client, WSServer* server) {
   /* Must have a \r\n\r\n */
   if (strstr(buf, "\r\n\r\n") == NULL) {
     if (strlen(buf) < WS_MAX_HEAD_SZ) {
-      LOG(("Headers too long %d [%s]...\n", client->listener, client->remote_ip));
+      Log::Trace("Headers too long {} [{}]...", client->listener, client->remote_ip);
       return ws_set_status(client, WS_READING, bytes);
     }
 
-    LOG(("Invalid newlines for handshake %d [%s]...\n", client->listener, client->remote_ip));
+    Log::Trace("Invalid newlines for handshake {} [{}]...", client->listener, client->remote_ip);
     http_error(client, WS_BAD_REQUEST_STR);
     return ws_set_status(client, WS_CLOSE, bytes);
   }
 
   /* Ensure we have valid HTTP headers for the handshake */
   if (parse_headers(client->headers) != 0) {
-    LOG(("Invalid headers for handshake %d [%s]...\n", client->listener, client->remote_ip));
+    Log::Trace("Invalid headers for handshake {} [{}]...", client->listener, client->remote_ip);
     http_error(client, WS_BAD_REQUEST_STR);
     return ws_set_status(client, WS_CLOSE, bytes);
   }
 
   /* Ensure we have the required headers */
   if (ws_verify_req_headers(client->headers) != 0) {
-    LOG(("Missing headers for handshake %d [%s]...\n", client->listener, client->remote_ip));
+    Log::Trace("Missing headers for handshake {} [{}]...", client->listener, client->remote_ip);
     http_error(client, WS_BAD_REQUEST_STR);
     return ws_set_status(client, WS_CLOSE, bytes);
   }
@@ -1551,7 +1547,7 @@ static int ws_get_handshake(WSClient* client, WSServer* server) {
   gettimeofday(&client->end_proc, NULL);
   if (wsconfig.accesslog)
     access_log(client, 101);
-  LOG(("Active: %d\n", list_count(server->colist)));
+  Log::Trace("Active: {}", list_count(server->colist));
 
   return ws_set_status(client, WS_OK, bytes);
 }
@@ -1730,11 +1726,11 @@ int ws_validate_string(const char* str, int len) {
   uint32_t state = UTF8_VALID;
 
   if (verify_utf8(&state, str, len) == UTF8_INVAL) {
-    LOG(("Invalid UTF8 data!\n"));
+    Log::Trace("Invalid UTF8 data!");
     return 1;
   }
   if (state != UTF8_VALID) {
-    LOG(("Invalid UTF8 data!\n"));
+    Log::Trace("Invalid UTF8 data!");
     return 1;
   }
 
@@ -1792,7 +1788,7 @@ static void ws_manage_payload_opcode(WSClient* client, WSServer* server) {
 
   switch ((*frm)->opcode) {
   case WS_OPCODE_CONTINUATION:
-    LOG(("CONTINUATION\n"));
+    Log::Trace("CONTINUATION");
     /* first frame can't be a continuation frame */
     if (!(*msg)->fragmented) {
       client->status = (WSStatus)(WS_ERR | WS_CLOSE);
@@ -1802,19 +1798,19 @@ static void ws_manage_payload_opcode(WSClient* client, WSServer* server) {
     break;
   case WS_OPCODE_TEXT:
   case WS_OPCODE_BIN:
-    LOG(("TEXT\n"));
+    Log::Trace("TEXT");
     client->message->opcode = (*frm)->opcode;
     ws_handle_text_bin(client, server);
     break;
   case WS_OPCODE_PONG:
-    LOG(("PONG\n"));
+    Log::Trace("PONG");
     ws_handle_pong(client);
     break;
   case WS_OPCODE_PING:
-    LOG(("PING\n"));
+    Log::Trace("PING");
     ws_handle_ping(client);
     break;
-  default: LOG(("CLOSE\n")); ws_handle_close(client);
+  default: Log::Trace("CLOSE"); ws_handle_close(client);
   }
 }
 
@@ -2021,7 +2017,7 @@ static int read_client_data(WSClient* client, WSServer* server) {
 
 /* Handle a tcp close connection. */
 static void handle_tcp_close(int conn, WSClient* client, WSServer* server) {
-  LOG(("Closing TCP %d [%s]\n", client->listener, client->remote_ip));
+  Log::Trace("Closing TCP {} [{}]", client->listener, client->remote_ip);
 
   if (client->ssl)
     shutdown_ssl(client);
@@ -2052,7 +2048,7 @@ static void handle_tcp_close(int conn, WSClient* client, WSServer* server) {
 
   /* remove client from our list */
   ws_remove_client_from_list(client, server);
-  LOG(("Connection Closed.\nActive: %d\n", list_count(server->colist)));
+  Log::Trace("Connection Closed.Active: {}", list_count(server->colist));
 }
 
 /* Handle a tcp read close connection. */
@@ -2083,7 +2079,7 @@ static void handle_accept(int listener, WSServer* server) {
   if (wsconfig.use_ssl)
     client->sslstatus = (WSStatus)(client->sslstatus | WS_TLS_ACCEPTING);
 
-  LOG(("Accepted: %d [%s]\n", newfd, client->remote_ip));
+  Log::Trace("Accepted: {} [{}]", newfd, client->remote_ip);
 }
 
 /* Handle a tcp read. */
@@ -2093,7 +2089,7 @@ static void handle_reads(int* conn, WSServer* server) {
   if (!(client = ws_get_client_from_list(*conn, &server->colist)))
     return;
 
-  LOG(("Handling read %d [%s]...\n", client->listener, client->remote_ip));
+  Log::Trace("Handling read {} [{}]...", client->listener, client->remote_ip);
 
   if (handle_ssl_pending_rw(conn, server, client) == 0)
     return;
@@ -2173,7 +2169,7 @@ static int ws_openfifo_out(WSPipeOut* pipeout) {
   status = open(wsconfig.pipeout, O_WRONLY | O_NONBLOCK);
   /* will attempt on the next write */
   if (status == -1 && errno == ENXIO)
-    LOG(("Unable to open fifo out: %s.\n", strerror(errno)));
+    Log::Trace("Unable to open fifo out: {}.", strerror(errno));
   else if (status < 0)
     FATAL("Unable to open fifo out: %s.", strerror(errno));
   pipeout->fd = status;
@@ -2349,17 +2345,17 @@ static void clear_fifo_packet(WSPipeIn* pipein) {
 static int ws_broadcast_fifo(WSClient* client, WSServer* server) {
   WSPacket* packet = server->pipein->packet;
 
-  LOG(("Broadcasting to %d [%s] ", client->listener, client->remote_ip));
+  Log::Trace("Broadcasting to {} [{}] ", client->listener, client->remote_ip);
   if (client == NULL)
     return 1;
 
   if (client->headers == NULL || client->headers->ws_accept == NULL) {
     /* no handshake for this client */
-    LOG(("No headers. Closing %d [%s]\n", client->listener, client->remote_ip));
+    Log::Trace("No headers. Closing {} [{}]", client->listener, client->remote_ip);
     return -1;
   }
 
-  LOG((" - Sending...\n"));
+  Log::Trace(" - Sending...");
   ws_send_data(client, (WSOpcode)packet->type, packet->data, packet->size);
 
   return 0;
@@ -2401,7 +2397,7 @@ static void ws_send_strict_fifo_to_client(WSServer* server, int listener, WSPack
     return;
   /* no handshake for this client */
   if (client->headers == NULL || client->headers->ws_accept == NULL) {
-    LOG(("No headers. Closing %d [%s]\n", client->listener, client->remote_ip));
+    Log::Trace("No headers. Closing {} [{}]", client->listener, client->remote_ip);
 
     handle_tcp_close(client->listener, client, server);
     return;
@@ -2453,12 +2449,12 @@ size_t unpack_uint32(const void* buf, uint32_t* val) {
  * On success, 0 is returned. */
 static int validate_fifo_packet(uint32_t type, int size) {
   if (type != WS_OPCODE_TEXT && type != WS_OPCODE_BIN) {
-    LOG(("Invalid fifo packet type\n"));
+    Log::Trace("Invalid fifo packet type");
     return 1;
   }
 
   if (size > wsconfig.max_frm_size) {
-    LOG(("Invalid fifo packet size\n"));
+    Log::Trace("Invalid fifo packet size");
     return 1;
   }
 
@@ -2628,10 +2624,10 @@ void ws_start(WSServer* server) {
     set_pollfd(server->self_pipe[0], POLLIN);
 
   if (wsconfig.sslcert && wsconfig.sslkey) {
-    LOG(("==Using TLS/SSL==\n"));
+    Log::Trace("==Using TLS/SSL==");
     wsconfig.use_ssl = 1;
     if (initialize_ssl_ctx(server)) {
-      LOG(("Unable to initialize_ssl_ctx\n"));
+      Log::Trace("Unable to initialize_ssl_ctx");
       return;
     }
   }
@@ -2653,7 +2649,7 @@ void ws_start(WSServer* server) {
     /* yep, wait patiently */
     if ((ret = poll(cfdstate, nfdstate, -1)) == -1) {
       switch (errno) {
-      case EINTR: LOG(("A signal was caught on poll(2)\n")); break;
+      case EINTR: Log::Trace("A signal was caught on poll(2)"); break;
       default: FATAL("Unable to poll: %s.", strerror(errno));
       }
     }
@@ -2662,16 +2658,16 @@ void ws_start(WSServer* server) {
     efd = cfdstate + nfdstate;
     for (pfd = cfdstate; pfd < efd; pfd++) {
       if (pfd->revents & POLLHUP)
-        LOG(("Got POLLHUP %d\n", pfd->fd));
+        Log::Trace("Got POLLHUP {}", pfd->fd);
       if (pfd->revents & POLLNVAL)
-        LOG(("Got POLLNVAL %d\n", pfd->fd));
+        Log::Trace("Got POLLNVAL {}", pfd->fd);
       if (pfd->revents & POLLERR)
-        LOG(("Got POLLERR %d\n", pfd->fd));
+        Log::Trace("Got POLLERR {}", pfd->fd);
 
       /* handle self-pipe trick */
       if (pfd->fd == server->self_pipe[0]) {
         if (pfd->revents & POLLIN) {
-          LOG(("Handled self-pipe to close event loop.\n"));
+          Log::Trace("Handled self-pipe to close event loop.");
           run = false;
           break;
         }
@@ -2731,8 +2727,7 @@ void ws_set_config_pipeout(const char* pipeout) { wsconfig.pipeout = pipeout; }
 void ws_set_config_accesslog(const char* accesslog) {
   wsconfig.accesslog = accesslog;
 
-  if (access_log_open(wsconfig.accesslog) == 1)
-    FATAL("Unable to open access log: %s.", strerror(errno));
+  Log::OpenLogAccessFile(wsconfig.accesslog);
 }
 
 /* Set if the server should handle strict named pipe handling. */

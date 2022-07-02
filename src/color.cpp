@@ -435,7 +435,7 @@ static int parse_attr_color(GColors* color, const char* value) {
 
   start = strchr(line, ' ');
   if ((!start) || (!*(start + 1))) {
-    LOG_DEBUG(("attempted to parse color attr: %s\n", value));
+    Log::Debug("attempted to parse color attr: {}", value);
     goto clean;
   }
 
@@ -464,12 +464,12 @@ static int parse_module_color(GColors* color, const char* value) {
 
   p = strrchr(line, ' ');
   if (!p || !*(p + 1)) {
-    LOG_DEBUG(("attempted to parse color module: %s\n", value));
+    Log::Debug("attempted to parse color module: {}", value);
     goto clean;
   }
 
   if ((color->module = get_module_enum(p + 1)) == -1)
-    LOG_DEBUG(("attempted to parse color module: %s\n", value));
+    Log::Debug("attempted to parse color module: {}", value);
 
 clean:
   free(line);

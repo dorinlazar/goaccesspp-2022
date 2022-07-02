@@ -716,7 +716,7 @@ static void* get_hash_from_store(GKHashStorage* store, int module, GSMetric metr
     mtrc = metric - MTRC_METADATA - 1;
     cnt = MTRC_CNT_BW - MTRC_UNIQUE_KEYS + 1;
     if (mtrc >= cnt) {
-      LOG_DEBUG(("Out of bounds when attempting to get hash %d\n", metric));
+      Log::Debug("Out of bounds when attempting to get hash {}", metric);
       return NULL;
     }
   }
