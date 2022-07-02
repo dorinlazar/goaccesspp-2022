@@ -40,73 +40,99 @@
 
 #define TRACE_SIZE 128
 
-#define FATAL(fmt, ...)                                                                       \
-  do                                                                                          \
-  {                                                                                           \
-    (void)endwin();                                                                           \
-    fprintf(stderr, "\nGoAccess - version %s - %s %s\n", GO_VERSION, __DATE__, __TIME__);     \
-    fprintf(stderr, "Config file: %s\n", conf.iconfigfile ?: NO_CONFIG_FILE);                 \
-    fprintf(stderr, "\nFatal error has occurred");                                            \
-    fprintf(stderr, "\nError occurred at: %s - %s - %d\n", __FILE__, __FUNCTION__, __LINE__); \
-    fprintf(stderr, fmt, ##__VA_ARGS__);                                                      \
-    fprintf(stderr, "\n\n");                                                                  \
-    LOG_DEBUG((fmt, ##__VA_ARGS__));                                                          \
-    exit(EXIT_FAILURE);                                                                       \
-  } while (0)
+#include <iostream>
+#include <source_location>
 
-#ifdef DEBUG
-#define DEBUG_TEST 1
-#else
-#define DEBUG_TEST 0
-#endif
+namespace kl {
+inline void _perform_log(std::ostream& os) { os << "\n"; }
+
+template <typename T, typename... Other>
+inline void _perform_log(std::ostream& os, const T& val, const Other&... args) {
+  os << val;
+  _perform_log(os, args...);
+}
+
+template <typename... Args>
+inline void log(const Args&... args) {
+  _perform_log(std::cout, args...);
+}
+
+template <typename... Args>
+inline void err(const Args&... args) {
+  _perform_log(std::cerr, args...);
+}
+
+} // namespace kl
+
+template <typename... Args>
+struct FATAL {
+  [[noreturn]] FATAL(const Args&... args, const std::source_location& loc = std::source_location::current()) {
+    (void)endwin();
+    kl::err("\nGoAccess - version ", GO_VERSION, " - " __DATE__, " ", __TIME__);
+    kl::err("Config file: ", conf.iconfigfile ?: NO_CONFIG_FILE);
+    kl::err("Fatal error has occurred");
+    kl::err("Error occurred at: ", loc.function_name(), "@", loc.file_name(), ":", loc.line());
+    kl::err("--------------------------------------------------------------------------");
+    kl::err(args...);
+    std::cout.flush();
+    std::cerr.flush();
+    std::abort();
+  }
+};
+
+// https://en.cppreference.com/w/cpp/language/class_template_argument_deduction#User-defined_deduction_guides
+template <typename... Args>
+FATAL(Args&&...) -> FATAL<Args...>;
+
+// template <typename... Args>
+// inline void LOG(const Args&... args) {
+//   kl::log(args...);
+// }
 
 /* access requests log */
-#define ACCESS_LOG(x, ...) \
-  do                       \
-  {                        \
-    access_fprintf x;      \
+#define ACCESS_LOG(x, ...)                                                                                             \
+  do {                                                                                                                 \
+    access_fprintf x;                                                                                                  \
   } while (0)
 /* debug log */
-#define LOG_DEBUG(x, ...) \
-  do                      \
-  {                       \
-    dbg_fprintf x;        \
+#define LOG_DEBUG(x, ...)                                                                                              \
+  do {                                                                                                                 \
+    dbg_fprintf x;                                                                                                     \
   } while (0)
 /* invalid requests log */
-#define LOG_INVALID(x, ...) \
-  do                        \
-  {                         \
-    invalid_fprintf x;      \
+#define LOG_INVALID(x, ...)                                                                                            \
+  do {                                                                                                                 \
+    invalid_fprintf x;                                                                                                 \
   } while (0)
 /* unknown browser log */
-#define LOG_UNKNOWNS(x, ...) \
-  do                         \
-  {                          \
-    unknowns_fprintf x;      \
-  } while (0)
-/* log debug wrapper */
-#define LOG(x)      \
-  do                \
-  {                 \
-    if (DEBUG_TEST) \
-      dbg_printf x; \
+#define LOG_UNKNOWNS(x, ...)                                                                                           \
+  do {                                                                                                                 \
+    unknowns_fprintf x;                                                                                                \
   } while (0)
 
-int access_log_open(const char *path);
-void access_fprintf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+#define DEBUG_TEST 0
+/* log debug wrapper */
+#define LOG(x)                                                                                                         \
+  do {                                                                                                                 \
+    if (DEBUG_TEST)                                                                                                    \
+      dbg_printf x;                                                                                                    \
+  } while (0)
+
+int access_log_open(const char* path);
+void access_fprintf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 void access_log_close(void);
-void dbg_fprintf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+void dbg_fprintf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 void dbg_log_close(void);
-void dbg_log_open(const char *file);
-void dbg_printf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
-void invalid_fprintf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
-void unknowns_fprintf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+void dbg_log_open(const char* file);
+void dbg_printf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
+void invalid_fprintf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
+void unknowns_fprintf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 void invalid_log_close(void);
-void invalid_log_open(const char *path);
-void set_signal_data(void *p);
+void invalid_log_open(const char* path);
+void set_signal_data(void* p);
 void setup_sigsegv_handler(void);
 void sigsegv_handler(int sig);
 void unknowns_log_close(void);
-void unknowns_log_open(const char *path);
+void unknowns_log_open(const char* path);
 
 #endif

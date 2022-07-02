@@ -1,0 +1,4 @@
+Ubuntu:
+
+apt install libfmt-dev libssl-dev libncurses-dev libbz2-dev libmaxminddb-dev libgeoip-dev
+Recommended: pkg-config clang-format clang-tools clang-tidy

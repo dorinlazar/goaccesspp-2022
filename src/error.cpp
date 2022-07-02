@@ -32,9 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
-#if defined(__GLIBC__)
 #include <execinfo.h>
-#endif
 #include <inttypes.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -159,11 +157,9 @@ void sigsegv_handler(int sig) {
   FILE* fp = stderr;
   int pid = getpid();
 
-#if defined(__GLIBC__)
   char** messages;
   size_t size, i;
   void* trace_stack[TRACE_SIZE];
-#endif
 
   (void)endwin();
   fprintf(fp, "\n");
@@ -172,7 +168,6 @@ void sigsegv_handler(int sig) {
 
   dump_struct(fp);
 
-#if defined(__GLIBC__)
   size = backtrace(trace_stack, TRACE_SIZE);
   messages = backtrace_symbols(trace_stack, size);
 
@@ -181,7 +176,6 @@ void sigsegv_handler(int sig) {
 
   for (i = 0; i < size; i++)
     fprintf(fp, "==%d== %zu %s\n", pid, i, messages[i]);
-#endif
 
   fprintf(fp, "==%d==\n", pid);
   fprintf(fp, "==%d== %s:\n", pid, ERR_PLEASE_REPORT);
