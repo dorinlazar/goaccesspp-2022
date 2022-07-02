@@ -273,7 +273,7 @@ void output_csv(GHolder* holder, const char* filename) {
 
   fp = (filename != NULL) ? fopen(filename, "w") : stdout;
   if (!fp)
-    FATAL("Unable to open CSV file: %s.", strerror(errno));
+    FATAL("Unable to open CSV file: {}.", strerror(errno));
 
   if (!conf.no_csv_summary)
     print_csv_summary(fp);

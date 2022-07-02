@@ -63,11 +63,11 @@ static char* set_db_path(const char* fn) {
 
   rpath = realpath(dbpath, NULL);
   if (rpath == NULL)
-    FATAL("Unable to open the specified db path/file '%s'. %s", dbpath, strerror(errno));
+    FATAL("Unable to open the specified db path/file '{}'. {}", dbpath, strerror(errno));
 
   /* sanity check: Is db_path accessible and a directory? */
   if (stat(rpath, &info) != 0)
-    FATAL("Unable to access database path: %s", strerror(errno));
+    FATAL("Unable to access database path: {}", strerror(errno));
   else if (!(info.st_mode & S_IFDIR))
     FATAL("Database path is not a directory.");
 

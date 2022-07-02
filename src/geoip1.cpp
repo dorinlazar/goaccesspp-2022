@@ -62,7 +62,7 @@ static GeoIP* geoip_open_db(const char* db) {
   geoip = GeoIP_open(db, GEOIP_MEMORY_CACHE);
 
   if (geoip == NULL)
-    FATAL("Unable to open GeoIP database: %s\n", db);
+    FATAL("Unable to open GeoIP database: {}\n", db);
 
   GeoIP_set_charset(geoip, GEOIP_CHARSET_UTF8);
   LOG_DEBUG(("Opened GeoIP City database: %s\n", db));

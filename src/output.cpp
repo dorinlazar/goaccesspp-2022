@@ -1128,7 +1128,7 @@ void output_html(GHolder* holder, const char* filename) {
     fp = stdout;
 
   if (!fp)
-    FATAL("Unable to open HTML file: %s.", strerror(errno));
+    FATAL("Unable to open HTML file: {}.", strerror(errno));
 
   /* use new lines to prettify output */
   if (conf.json_pretty_print)

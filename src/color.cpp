@@ -381,7 +381,7 @@ static int extract_color(char* color) {
     return -2;
   /* ensure used color is supported by the terminal */
   if (col > COLORS)
-    FATAL("Terminal doesn't support color: %d - max colors: %d", col, COLORS);
+    FATAL("Terminal doesn't support color: {} - max colors: {}", col, COLORS);
 
   return col;
 }
@@ -548,7 +548,7 @@ GColors* get_color(GColorItem item) {
     return (GColors*)match->data;
 
   /* should not get here */
-  FATAL("Unable to find color item %d", item);
+  FATAL("Unable to find color item {}", item);
 }
 
 /* Get color item properties given an item (enumerated) and its module.
@@ -587,28 +587,28 @@ static void parse_color_line(GColorPair* pair, GColors* color, char* line) {
   /* key */
   idx = strcspn(line, " \t");
   if (strlen(line) == idx)
-    FATAL("Malformed color key at line: %s", line);
+    FATAL("Malformed color key at line: {}", line);
 
   line[idx] = '\0';
   if ((item = get_color_item_enum(line)) == -1)
-    FATAL("Unable to find color key: %s", line);
+    FATAL("Unable to find color key: {}", line);
 
   /* value */
   val = line + (idx + 1);
   idx = strspn(val, " \t");
   if (strlen(val) == idx)
-    FATAL("Malformed color value at line: %s", line);
+    FATAL("Malformed color value at line: {}", line);
   val = val + idx;
 
   /* get background/foreground color */
   if (parse_bg_fg_color(pair, val) == 1)
-    FATAL("Invalid bg/fg color pairs at: %s %s", line, val);
+    FATAL("Invalid bg/fg color pairs at: {} {}", line, val);
 
   if (parse_attr_color(color, val) == 1)
-    FATAL("Invalid color attrs at: %s %s", line, val);
+    FATAL("Invalid color attrs at: {} {}", line, val);
 
   if (parse_module_color(color, val) == 1)
-    FATAL("Invalid color module at: %s %s", line, val);
+    FATAL("Invalid color module at: {} {}", line, val);
 
   color->item = (GColorItem)item;
 }

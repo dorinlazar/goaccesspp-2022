@@ -244,6 +244,6 @@ void gdns_thread_create(void) {
   active_gdns = 1;
   th = pthread_create(&(gdns_thread.thread), NULL, dns_worker, NULL);
   if (th)
-    FATAL("Return code from pthread_create(): %d", th);
+    FATAL("Return code from pthread_create(): {}", th);
   pthread_detach(gdns_thread.thread);
 }

@@ -76,7 +76,7 @@ void init_geoip(void) {
   mmdb = (MMDB_s*)xcalloc(1, sizeof(MMDB_s));
   if ((status = MMDB_open(fn, MMDB_MODE_MMAP, mmdb)) != MMDB_SUCCESS) {
     free(mmdb);
-    FATAL("Unable to open GeoIP2 database %s: %s\n", fn, MMDB_strerror(status));
+    FATAL("Unable to open GeoIP2 database {}: {}\n", fn, MMDB_strerror(status));
   }
 
   if (strstr(mmdb->metadata.database_type, "-City") != NULL)
@@ -96,7 +96,7 @@ static int geoip_lookup(MMDB_lookup_result_s* res, const char* ip) {
     return 1;
 
   if (MMDB_SUCCESS != mmdb_err)
-    FATAL("Error from libmaxminddb: %s\n", MMDB_strerror(mmdb_err));
+    FATAL("Error from libmaxminddb: {}\n", MMDB_strerror(mmdb_err));
 
   if (!(*res).found_entry)
     return 1;
@@ -173,10 +173,10 @@ static char* get_value(MMDB_lookup_result_s res, ...) {
     return NULL;
 
   if (entry_data.type != MMDB_DATA_TYPE_UTF8_STRING)
-    FATAL("Invalid data UTF8 GeoIP2 data %d:\n", entry_data.type);
+    FATAL("Invalid data UTF8 GeoIP2 data {}:\n", entry_data.type);
 
   if ((value = strndup(entry_data.utf8_string, entry_data.data_size)) == NULL)
-    FATAL("Unable to allocate buffer %s: ", strerror(errno));
+    FATAL("Unable to allocate buffer {}: ", strerror(errno));
 
   return value;
 }

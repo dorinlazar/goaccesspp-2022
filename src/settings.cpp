@@ -134,7 +134,7 @@ char* get_config_file_path(void) {
   if (conf.iconfigfile != NULL) {
     rpath = realpath(conf.iconfigfile, NULL);
     if (rpath == NULL)
-      FATAL("Unable to open the specified config file. %s", strerror(errno));
+      FATAL("Unable to open the specified config file. {}", strerror(errno));
     return rpath;
   }
 
@@ -249,7 +249,7 @@ int parse_conf_file(int* argc, char*** argv) {
     /* key */
     idx = strcspn(line, " \t");
     if (strlen(line) == idx)
-      FATAL("Malformed config key at line: %d", n);
+      FATAL("Malformed config key at line: {}", n);
 
     line[idx] = '\0';
 
@@ -266,7 +266,7 @@ int parse_conf_file(int* argc, char*** argv) {
     val = line + (idx + 1);
     idx = strspn(val, " \t");
     if (strlen(line) == idx)
-      FATAL("Malformed config value at line: %d", n);
+      FATAL("Malformed config value at line: {}", n);
     val = val + idx;
     val = trim_str(val);
 

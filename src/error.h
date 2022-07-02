@@ -42,38 +42,19 @@
 
 #include <iostream>
 #include <source_location>
+#include <fmt/format.h>
 
-namespace kl {
-inline void _perform_log(std::ostream& os) { os << "\n"; }
-
-template <typename T, typename... Other>
-inline void _perform_log(std::ostream& os, const T& val, const Other&... args) {
-  os << val;
-  _perform_log(os, args...);
-}
-
-template <typename... Args>
-inline void log(const Args&... args) {
-  _perform_log(std::cout, args...);
-}
-
-template <typename... Args>
-inline void err(const Args&... args) {
-  _perform_log(std::cerr, args...);
-}
-
-} // namespace kl
-
-template <typename... Args>
+template <typename FormatArg, typename... Args>
 struct FATAL {
-  [[noreturn]] FATAL(const Args&... args, const std::source_location& loc = std::source_location::current()) {
+  [[noreturn]] FATAL(const FormatArg& fmtarg, Args&&... args,
+                     const std::source_location& loc = std::source_location::current()) {
     (void)endwin();
-    kl::err("\nGoAccess - version ", GO_VERSION, " - " __DATE__, " ", __TIME__);
-    kl::err("Config file: ", conf.iconfigfile ?: NO_CONFIG_FILE);
-    kl::err("Fatal error has occurred");
-    kl::err("Error occurred at: ", loc.function_name(), "@", loc.file_name(), ":", loc.line());
-    kl::err("--------------------------------------------------------------------------");
-    kl::err(args...);
+    std::cerr << fmt::format("\nGoAccess - version {} - {}T{}\n", GO_VERSION, __DATE__, __TIME__);
+    std::cerr << fmt::format("Config file: {}\n", conf.iconfigfile ? conf.iconfigfile : NO_CONFIG_FILE);
+    std::cerr << "Fatal error has occurred\n";
+    std::cerr << fmt::format("Error occurred at : {} : {} = > {}\n\n", loc.file_name(), loc.line(),
+                             loc.function_name());
+    std::cerr << fmt::vformat(fmtarg, fmt::make_format_args(args...));
     std::cout.flush();
     std::cerr.flush();
     std::abort();
@@ -83,11 +64,6 @@ struct FATAL {
 // https://en.cppreference.com/w/cpp/language/class_template_argument_deduction#User-defined_deduction_guides
 template <typename... Args>
 FATAL(Args&&...) -> FATAL<Args...>;
-
-// template <typename... Args>
-// inline void LOG(const Args&... args) {
-//   kl::log(args...);
-// }
 
 /* access requests log */
 #define ACCESS_LOG(x, ...)                                                                                             \

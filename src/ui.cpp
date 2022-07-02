@@ -153,7 +153,7 @@ void end_spinner(void) {
     /* wait for the ui_spinner thread to finish */
     struct timespec ts = {.tv_sec = 0, .tv_nsec = SPIN_UPDATE_INTERVAL};
     if (nanosleep(&ts, NULL) == -1 && errno != EINTR)
-      FATAL("nanosleep: %s", strerror(errno));
+      FATAL("nanosleep: {}", strerror(errno));
   }
 }
 
@@ -879,7 +879,7 @@ static void* ui_spinner(void* ptr_data) {
 
     pthread_mutex_unlock(&sp->mutex);
     if (nanosleep(&ts, NULL) == -1 && errno != EINTR)
-      FATAL("nanosleep: %s", strerror(errno));
+      FATAL("nanosleep: {}", strerror(errno));
   }
 }
 

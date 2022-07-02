@@ -763,7 +763,7 @@ static void set_tm_tm_logitem(GLogItem* logitem, struct tm tm) {
 static void set_numeric_date(uint32_t* numdate, const char* date) {
   int res = 0;
   if ((res = str2int(date)) == -1)
-    FATAL("Unable to parse date to integer %s", date);
+    FATAL("Unable to parse date to integer {}", date);
   *numdate = res;
 }
 
@@ -1879,7 +1879,7 @@ int set_initial_persisted_data(GLog* glog, FILE* fp, const char* fn) {
 
   len = MIN(glog->size, READ_BYTES);
   if ((fread(glog->snippet, len, 1, fp)) != 1 && ferror(fp))
-    FATAL("Unable to fread the specified log file '%s'", fn);
+    FATAL("Unable to fread the specified log file '{}'", fn);
   glog->snippetlen = len;
 
   fseek(fp, 0, SEEK_SET);
@@ -1922,7 +1922,7 @@ static int read_log(GLog* glog, int dry_run) {
 
   /* make sure we can open the log (if not reading from stdin) */
   if (!piping && (fp = fopen(glog->filename, "r")) == NULL)
-    FATAL("Unable to open the specified log file '%s'. %s", glog->filename, strerror(errno));
+    FATAL("Unable to open the specified log file '{}'. {}", glog->filename, strerror(errno));
 
   /* grab the inode of the file being parsed */
   if (!piping && stat(glog->filename, &fdstat) == 0) {
@@ -1965,7 +1965,7 @@ int parse_log(Logs* logs, int dry_run) {
 
   /* verify that we have the required formats */
   if ((err_log = verify_formats()))
-    FATAL("%s", err_log);
+    FATAL("{}", err_log);
 
   /* no data piped, no logs passed, load from disk only then */
   if (conf.restore && !logs->restored)

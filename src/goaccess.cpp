@@ -205,16 +205,16 @@ static void drop_permissions(void) {
   errno = 0;
   if ((pw = getpwnam(conf.username)) == NULL) {
     if (errno == 0)
-      FATAL("No such user %s", conf.username);
-    FATAL("Unable to retrieve user %s: %s", conf.username, strerror(errno));
+      FATAL("No such user {}", conf.username);
+    FATAL("Unable to retrieve user {}: {}", conf.username, strerror(errno));
   }
 
   if (setgroups(1, &pw->pw_gid) == -1)
-    FATAL("setgroups: %s", strerror(errno));
+    FATAL("setgroups: {}", strerror(errno));
   if (setgid(pw->pw_gid) == -1)
-    FATAL("setgid: %s", strerror(errno));
+    FATAL("setgid: {}", strerror(errno));
   if (setuid(pw->pw_uid) == -1)
-    FATAL("setuid: %s", strerror(errno));
+    FATAL("setuid: {}", strerror(errno));
 }
 
 /* Open the pidfile whose name is specified in the given path and write
@@ -229,7 +229,7 @@ static void write_pid_file(const char* path, pid_t pid) {
     fprintf(pidfile, "%d", pid);
     fclose(pidfile);
   } else {
-    FATAL("Unable to open the specified pid file. %s", strerror(errno));
+    FATAL("Unable to open the specified pid file. {}", strerror(errno));
   }
 }
 
@@ -726,7 +726,7 @@ static void verify_inode(FILE* fp, GLog* glog) {
   struct stat fdstat;
 
   if (stat(glog->filename, &fdstat) == -1)
-    FATAL("Unable to stat the specified log file '%s'. %s", glog->filename, strerror(errno));
+    FATAL("Unable to stat the specified log file '{}'. {}", glog->filename, strerror(errno));
 
   glog->size = fdstat.st_size;
   /* Either the log got smaller, probably was truncated so start reading from 0
@@ -769,7 +769,7 @@ static int perform_tail_follow(GLog* glog) {
     return 0;
 
   if (!(fp = fopen(glog->filename, "r")))
-    FATAL("Unable to read the specified log file '%s'. %s", glog->filename, strerror(errno));
+    FATAL("Unable to read the specified log file '{}'. {}", glog->filename, strerror(errno));
 
   verify_inode(fp, glog);
 
@@ -777,7 +777,7 @@ static int perform_tail_follow(GLog* glog) {
   /* This is not ideal, but maybe the only reliable way to know if the
    * current log looks different than our first read/parse */
   if ((fread(buf, len, 1, fp)) != 1 && ferror(fp))
-    FATAL("Unable to fread the specified log file '%s'", glog->filename);
+    FATAL("Unable to fread the specified log file '{}'", glog->filename);
 
   /* For the case where the log got larger since the last iteration, we attempt
    * to compare the first READ_BYTES against the READ_BYTES we had since the last
@@ -823,7 +823,7 @@ static void tail_loop_html(Logs* logs) {
       tail_html();
 
     if (nanosleep(&refresh, NULL) == -1 && errno != EINTR)
-      FATAL("nanosleep: %s", strerror(errno));
+      FATAL("nanosleep: {}", strerror(errno));
   }
 }
 
@@ -922,7 +922,7 @@ static void term_tail_logs(Logs* logs) {
     render_screens(offset);
   }
   if (nanosleep(&ts, NULL) == -1 && errno != EINTR) {
-    FATAL("nanosleep: %s", strerror(errno));
+    FATAL("nanosleep: {}", strerror(errno));
   }
 }
 
@@ -1257,7 +1257,7 @@ static FILE* set_pipe_stdin(void) {
     goto out1;
 
   if ((pipe_fd = dup(fileno(stdin))) == -1)
-    FATAL("Unable to dup stdin: %s", strerror(errno));
+    FATAL("Unable to dup stdin: {}", strerror(errno));
 
   pipe = fdopen(pipe_fd, "r");
   if (freopen(term, "r", stdin) == 0)
@@ -1278,7 +1278,7 @@ out1:
   if (pipe_fd == -1)
     pipe_fd = fileno(pipe);
   if (fcntl(pipe_fd, F_SETFL, fcntl(pipe_fd, F_GETFL, 0) | O_NONBLOCK) == -1)
-    FATAL("Unable to set fd as non-blocking: %s.", strerror(errno));
+    FATAL("Unable to set fd as non-blocking: {}.", strerror(errno));
 
 out2:
 
@@ -1469,7 +1469,7 @@ static void set_curses(Logs* logs, int* quit) {
   }
   /* Piping data in without log/date/time format */
   else if (conf.read_stdin && (err_log = verify_formats())) {
-    FATAL("%s", err_log);
+    FATAL("{}", err_log);
   }
   /* straight parsing */
   else {

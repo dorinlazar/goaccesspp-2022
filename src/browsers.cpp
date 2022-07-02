@@ -328,7 +328,7 @@ static void parse_browser_token(char*** list, char* line, int n) {
   /* key */
   idx = strcspn(line, "\t");
   if (strlen(line) == idx)
-    FATAL("Malformed browser name at line: %d", n);
+    FATAL("Malformed browser name at line: {}", n);
 
   line[idx] = '\0';
 
@@ -336,7 +336,7 @@ static void parse_browser_token(char*** list, char* line, int n) {
   val = line + (idx + 1);
   idx = strspn(val, "\t");
   if (strlen(val) == idx)
-    FATAL("Malformed browser category at line: %d", n);
+    FATAL("Malformed browser category at line: {}", n);
   val = val + idx;
   val = trim_str(val);
 
@@ -371,7 +371,7 @@ void parse_browsers_file(void) {
 
   /* could not open browsers file */
   if ((file = fopen(conf.browsers_file, "r")) == NULL)
-    FATAL("Unable to open browser's file: %s", strerror(errno));
+    FATAL("Unable to open browser's file: {}", strerror(errno));
 
   conf.user_browsers_hash = (char***)xmalloc(MAX_CUSTOM_BROWSERS * sizeof(char**));
   /* load hash from the user's given browsers file  */
