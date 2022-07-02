@@ -1468,7 +1468,6 @@ int main(int argc, char** argv) {
   int quit = 0, ret = 0;
 
   block_thread_signals();
-  setup_sigsegv_handler();
 
   /* command line/config options */
   verify_global_config(argc, argv);

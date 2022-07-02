@@ -1,20 +1,14 @@
 #pragma once
-#ifndef BROWSERS_H_INCLUDED
-#define BROWSERS_H_INCLUDED
 
-#define BROWSER_TYPE_LEN 13
-#define MAX_LINE_BROWSERS 128
-#define MAX_CUSTOM_BROWSERS 256
+#include <string>
+#include <optional>
 
-/* Each Browser contains the number of hits and the Browser's type */
-typedef struct GBrowser_ {
-  char browser_type[BROWSER_TYPE_LEN];
-  int hits;
-} GBrowser;
-
-char* verify_browser(char* str, char* browser_type);
-int is_crawler(const char* agent);
-void free_browsers_hash(void);
-void parse_browsers_file(void);
-
-#endif
+namespace goapp {
+class Browsers {
+public:
+  static bool IsCrawler(const std::string& agent);
+  static std::optional<std::string> GetBrowserType(const std::string& str);
+  static std::optional<std::string> ParseUserAgent(const std::string& user_agent);
+  static void LoadBrowsersFile(const std::string& browsers_file);
+};
+} // namespace goapp

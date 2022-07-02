@@ -1,53 +1,14 @@
-/**
- 6 browsers.c -- functions for dealing with browsers
- *    ______      ___
- *   / ____/___  /   | _____________  __________
- *  / / __/ __ \/ /| |/ ___/ ___/ _ \/ ___/ ___/
- * / /_/ / /_/ / ___ / /__/ /__/  __(__  |__  )
- * \____/\____/_/  |_\___/\___/\___/____/____/
- *
- * The MIT License (MIT)
- * Copyright (c) 2009-2022 Gerardo Orellana <hello @ goaccess.io>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stddef.h>
-
 #include "browsers.h"
 
+#include <fstream>
+#include <unordered_map>
+#include <cstring>
+
+#include "textutils.hpp"
 #include "error.h"
-#include "settings.h"
-#include "util.h"
-#include "xmalloc.h"
-
-/* ###NOTE: The size of the list is proportional to the run time,
- * which makes this pretty slow */
-
-static char*** browsers_hash = NULL;
 
 /* {"search string", "belongs to"} */
-static const char* browsers[][2] = {
+static std::unordered_map<std::string, std::string> s_browsers = {
     /* Game systems: most of them are based of major browsers,
      * thus they need to go before. */
     {"Xbox One", "Game Systems"},
@@ -278,134 +239,60 @@ static const char* browsers[][2] = {
 
     {"Mozilla", "Others"}};
 
-/* Free all browser entries from our array of key/value pairs. */
-void free_browsers_hash(void) {
-  size_t i;
-  int j;
+namespace goapp {
+bool Browsers::IsCrawler(const std::string& agent) { return GetBrowserType(agent) == "Crawlers"; }
 
-  for (i = 0; i < ARRAY_SIZE(browsers); ++i) {
-    free(browsers_hash[i][0]);
-    free(browsers_hash[i][1]);
-    free(browsers_hash[i]);
+std::optional<std::string> Browsers::GetBrowserType(const std::string& agent) {
+  auto it = s_browsers.find(agent);
+  if (it != s_browsers.end()) {
+    return it->second;
   }
-  free(browsers_hash);
-
-  for (j = 0; j < conf.browsers_hash_idx; ++j) {
-    free(conf.user_browsers_hash[j][0]);
-    free(conf.user_browsers_hash[j][1]);
-    free(conf.user_browsers_hash[j]);
-  }
-  if (conf.browsers_file) {
-    free(conf.user_browsers_hash);
-  }
+  return std::nullopt;
 }
 
-static int is_dup(char*** list, int len, const char* browser) {
-  int i;
-  /* check for dups */
-  for (i = 0; i < len; ++i) {
-    if (strcmp(browser, list[i][0]) == 0)
-      return 1;
+void AddBrowserLine(const std::string& line) {
+  auto trimmed = text::Trim({line.c_str(), line.size()});
+  if (line.size() == 0 || line[0] == '#') {
+    return;
   }
-  return 0;
-}
-
-/* Set a browser/type pair into our multidimensional array of browsers.
- *
- * On duplicate functions returns void.
- * Otherwise memory is mallo'd for our array entry. */
-static void set_browser(char*** list, int idx, const char* browser, const char* type) {
-  list[idx] = (char**)xcalloc(2, sizeof(char*));
-  list[idx][0] = xstrdup(browser);
-  list[idx][1] = xstrdup(type);
-}
-
-/* Parse the key/value pair from the browser list file. */
-static void parse_browser_token(char*** list, char* line, int n) {
-  char* val;
-  size_t idx = 0;
-
-  /* key */
-  idx = strcspn(line, "\t");
-  if (strlen(line) == idx)
-    FATAL("Malformed browser name at line: {}", n);
-
-  line[idx] = '\0';
-
-  /* value */
-  val = line + (idx + 1);
-  idx = strspn(val, "\t");
-  if (strlen(val) == idx)
-    FATAL("Malformed browser category at line: {}", n);
-  val = val + idx;
-  val = trim_str(val);
-
-  if (is_dup(list, conf.browsers_hash_idx, line)) {
-    Log::Invalids("Duplicate browser entry: {}", line);
+  auto idx = line.find('\t');
+  if (idx == std::string_view::npos) {
+    Log::Invalids("Malformed browser entry: {}", trimmed);
     return;
   }
 
-  set_browser(list, conf.browsers_hash_idx, line, val);
-  conf.browsers_hash_idx++;
+  std::string agent(trimmed.substr(0, idx));
+  std::string type(text::TrimRight(trimmed.substr(idx)));
+  if (s_browsers.count(agent) != 0) {
+    Log::Invalids("Duplicate browser entry: {}", agent);
+  }
+  s_browsers.insert_or_assign(agent, type);
 }
 
-/* Parse our default array of browsers and put them on our hash including those
- * from the custom parsed browsers file.
- *
- * On error functions returns void.
- * Otherwise browser entries are put into the hash. */
-void parse_browsers_file(void) {
-  char line[MAX_LINE_BROWSERS + 1];
-  FILE* file;
-  int n = 0;
-  size_t i, len = ARRAY_SIZE(browsers);
+void Browsers::LoadBrowsersFile(const std::string& browsers_file) {
+  std::ifstream file(browsers_file);
+  if (file.failbit) {
+    FATAL("Unable to open browsers file {}: {}", browsers_file, ::strerror(errno));
+  }
+  std::string str;
+  while (std::getline(file, str)) {
+    AddBrowserLine(str);
+  }
+}
 
-  browsers_hash = (char***)xmalloc(ARRAY_SIZE(browsers) * sizeof(char**));
-  /* load hash from the browser's array (default)  */
-  for (i = 0; i < len; ++i) {
-    set_browser(browsers_hash, i, browsers[i][0], browsers[i][1]);
+std::optional<std::string> Browsers::ParseUserAgent(const std::string& user_agent) {
+  if (user_agent.size() == 0) {
+    return std::nullopt;
   }
 
-  if (!conf.browsers_file)
-    return;
-
-  /* could not open browsers file */
-  if ((file = fopen(conf.browsers_file, "r")) == NULL)
-    FATAL("Unable to open browser's file: {}", strerror(errno));
-
-  conf.user_browsers_hash = (char***)xmalloc(MAX_CUSTOM_BROWSERS * sizeof(char**));
-  /* load hash from the user's given browsers file  */
-  while (fgets(line, sizeof line, file) != NULL) {
-    while (line[0] == ' ' || line[0] == '\t')
-      memmove(line, line + 1, strlen(line));
-    n++;
-
-    if (line[0] == '\n' || line[0] == '\r' || line[0] == '#')
-      continue;
-    if (conf.browsers_hash_idx >= MAX_CUSTOM_BROWSERS)
-      FATAL("Maximum number of custom browsers has been reached");
-    parse_browser_token(conf.user_browsers_hash, line, n);
+  std::optional<std::string> agent = ExtractCrawlerUserAgent(user_agent);
+  if (agent) {
+    return agent;
   }
-  fclose(file);
+
+  return std::nullopt;
 }
-
-/* Determine if the user-agent is a crawler.
- *
- * On error or is not a crawler, 0 is returned.
- * If it is a crawler, 1 is returned . */
-int is_crawler(const char* agent) {
-  char type[BROWSER_TYPE_LEN];
-  char *browser, *a;
-
-  if (agent == NULL || *agent == '\0')
-    return 0;
-
-  if ((a = xstrdup(agent), browser = verify_browser(a, type)) != NULL)
-    free(browser);
-  free(a);
-
-  return strcmp(type, "Crawlers") == 0 ? 1 : 0;
-}
+} // namespace goapp
 
 /* Return the Opera 15 and beyond.
  *
