@@ -33,7 +33,7 @@
 
 #include "geoip1.h"
 
-#include "error.h"
+#include "error.hpp"
 #include "util.h"
 
 static GeoIP* geo_location_data;

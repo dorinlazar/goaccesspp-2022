@@ -36,7 +36,7 @@
 
 #include "color.h"
 
-#include "error.h"
+#include "error.hpp"
 #include "gslist.h"
 #include "util.h"
 #include "xmalloc.h"

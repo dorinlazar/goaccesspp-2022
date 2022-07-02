@@ -55,7 +55,7 @@
 #include "ui.h"
 
 #include "color.h"
-#include "error.h"
+#include "error.hpp"
 #include "gkhash.h"
 #include "gmenu.h"
 #include "goaccess.h"

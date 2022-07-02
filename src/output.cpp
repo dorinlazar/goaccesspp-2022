@@ -40,7 +40,7 @@
 
 #include "output.h"
 
-#include "error.h"
+#include "error.hpp"
 #include "gkhash.h"
 #include "websocket/gwsocket.h"
 #include "json.h"

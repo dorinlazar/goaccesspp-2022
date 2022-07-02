@@ -40,7 +40,7 @@
 #include "gwsocket.h"
 
 #include "commons.h"
-#include "error.h"
+#include "error.hpp"
 #include "goaccess.h"
 #include "json.h"
 #include "parser.h"

@@ -52,7 +52,7 @@
 #include "parser.h"
 
 #include "browsers.h"
-#include "error.h"
+#include "error.hpp"
 #include "goaccess.h"
 #include "gstorage.h"
 #include "pdjson.h"

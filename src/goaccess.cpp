@@ -56,7 +56,7 @@
 #include "geoip1.h"
 #include "browsers.h"
 #include "csv.h"
-#include "error.h"
+#include "error.hpp"
 #include "gdashboard.h"
 #include "gdns.h"
 #include "gholder.h"
@@ -68,6 +68,10 @@
 #include "util.h"
 #include "websocket/websocket.h"
 #include "xmalloc.h"
+
+// ------------------
+#include "opsys/osutils.hpp"
+// ------------------
 
 GConf conf;
 
@@ -183,25 +187,6 @@ static void cleanup(int ret) {
     output_logerrors();
 
   house_keeping();
-}
-
-/* Drop permissions to the user specified. */
-static void drop_permissions(void) {
-  struct passwd* pw;
-
-  errno = 0;
-  if ((pw = getpwnam(conf.username)) == NULL) {
-    if (errno == 0)
-      FATAL("No such user {}", conf.username);
-    FATAL("Unable to retrieve user {}: {}", conf.username, strerror(errno));
-  }
-
-  if (setgroups(1, &pw->pw_gid) == -1)
-    FATAL("setgroups: {}", strerror(errno));
-  if (setgid(pw->pw_gid) == -1)
-    FATAL("setgid: {}", strerror(errno));
-  if (setuid(pw->pw_uid) == -1)
-    FATAL("setuid: {}", strerror(errno));
 }
 
 /* Open the pidfile whose name is specified in the given path and write
@@ -1334,8 +1319,9 @@ static Logs* initializer(void) {
   Logs* logs;
 
   /* drop permissions right away */
-  if (conf.username)
-    drop_permissions();
+  if (conf.username) {
+    goapp::opsys::SwitchToUser(conf.username);
+  }
 
   /* then initialize modules and set */
   gscroll.current = (GModule)init_modules();

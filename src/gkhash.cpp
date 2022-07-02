@@ -38,7 +38,7 @@
 
 #include "gkhash.h"
 
-#include "error.h"
+#include "error.hpp"
 #include "persistence.h"
 #include "sort.h"
 #include "util.h"

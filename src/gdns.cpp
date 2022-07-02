@@ -47,7 +47,7 @@
 
 #include "gdns.h"
 
-#include "error.h"
+#include "error.hpp"
 #include "gkhash.h"
 #include "goaccess.h"
 #include "util.h"

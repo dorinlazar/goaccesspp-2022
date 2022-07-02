@@ -38,7 +38,7 @@
 
 #include "gholder.h"
 
-#include "error.h"
+#include "error.hpp"
 #include "gdns.h"
 #include "gkhash.h"
 #include "util.h"

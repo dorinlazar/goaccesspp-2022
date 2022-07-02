@@ -36,7 +36,7 @@
 
 #include "browsers.h"
 
-#include "error.h"
+#include "error.hpp"
 #include "settings.h"
 #include "util.h"
 #include "xmalloc.h"

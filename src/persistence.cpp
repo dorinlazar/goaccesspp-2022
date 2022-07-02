@@ -37,7 +37,7 @@
 
 #include "persistence.h"
 
-#include "error.h"
+#include "error.hpp"
 #include "gkhash.h"
 #include "sort.h"
 #include "tpl.h"

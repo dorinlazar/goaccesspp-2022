@@ -45,7 +45,7 @@
 
 #include "json.h"
 
-#include "error.h"
+#include "error.hpp"
 #include "gkhash.h"
 #include "settings.h"
 #include "ui.h"

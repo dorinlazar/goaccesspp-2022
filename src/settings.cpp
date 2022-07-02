@@ -39,7 +39,7 @@
 
 #include "settings.h"
 
-#include "error.h"
+#include "error.hpp"
 #include "gkhash.h"
 #include "labels.h"
 #include "pdjson.h"

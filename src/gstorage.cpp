@@ -39,7 +39,7 @@
 #include "geoip1.h"
 #include "browsers.h"
 #include "commons.h"
-#include "error.h"
+#include "error.hpp"
 #include "gkhash.h"
 #include "opesys.h"
 #include "ui.h"

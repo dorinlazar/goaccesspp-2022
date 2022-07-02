@@ -50,7 +50,7 @@
 #include "websocket.h"
 
 #include "base64.h"
-#include "error.h"
+#include "error.hpp"
 #include "gslist.h"
 #include "sha1.h"
 #include "xmalloc.h"

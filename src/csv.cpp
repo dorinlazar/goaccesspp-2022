@@ -45,7 +45,7 @@
 
 #include "csv.h"
 
-#include "error.h"
+#include "error.hpp"
 #include "gkhash.h"
 #include "ui.h"
 #include "util.h"

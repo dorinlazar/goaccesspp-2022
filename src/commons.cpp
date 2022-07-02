@@ -36,7 +36,7 @@
 
 #include "commons.h"
 
-#include "error.h"
+#include "error.hpp"
 #include "labels.h"
 #include "settings.h"
 #include "util.h"

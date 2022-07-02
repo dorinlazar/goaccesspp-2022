@@ -1,4 +1,4 @@
-#include "error.h"
+#include "error.hpp"
 #include <fstream>
 
 Log::LogWriter Log::m_log_writer;

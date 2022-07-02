@@ -35,7 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "error.h"
+#include "error.hpp"
 #include "xmalloc.h"
 
 /* Self-checking wrapper to malloc() */

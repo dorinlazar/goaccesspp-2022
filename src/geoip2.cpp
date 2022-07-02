@@ -36,7 +36,7 @@
 
 #include "geoip1.h"
 
-#include "error.h"
+#include "error.hpp"
 #include "labels.h"
 #include "util.h"
 #include "xmalloc.h"

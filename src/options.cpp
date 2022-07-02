@@ -38,7 +38,7 @@
 
 #include "options.h"
 
-#include "error.h"
+#include "error.hpp"
 #include "labels.h"
 #include "util.h"
 

@@ -42,7 +42,7 @@
 #include "gkhash.h"
 #include "gholder.h"
 #include "color.h"
-#include "error.h"
+#include "error.hpp"
 #include "gstorage.h"
 #include "util.h"
 #include "xmalloc.h"
