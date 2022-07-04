@@ -842,7 +842,7 @@ void set_log_format_str(const char* oarg) {
 }
 
 // ============================
-// CRAP ENDS HERE
+// Original crap ends here
 // ============================
 GConf conf;
 
