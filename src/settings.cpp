@@ -49,6 +49,8 @@
 static char** nargv;
 static int nargc = 0;
 
+GConf conf;
+
 static GEnum LOGTYPE[] = {
     {"COMBINED", COMBINED},
     {"VCOMBINED", VCOMBINED},

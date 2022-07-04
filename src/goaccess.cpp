@@ -74,8 +74,6 @@
 #include "ui/textui.hpp"
 // ------------------
 
-GConf conf;
-
 /* Loading/Spinner */
 GSpinner* parsing_spinner;
 /* active reverse dns flag */

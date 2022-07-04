@@ -185,10 +185,9 @@ typedef struct GConf_ {
   int static_file_idx;    /* static extensions index */
   int browsers_hash_idx;  /* browsers hash index */
 
-  size_t static_file_max_len;
+  size_t static_file_max_len = 0;
 
 } GConf;
-// TODO: make sure initializers are setting this to 0.
 
 char* get_selected_date_str(size_t idx);
 char* get_selected_format_str(size_t idx);
