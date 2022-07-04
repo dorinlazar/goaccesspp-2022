@@ -6,8 +6,7 @@
 #include "commons.h"
 #endif
 
-#include <ncurses.h>
-
+#include "ui/textui.hpp"
 #include "settings.h"
 
 #define TRACE_SIZE 128
@@ -97,7 +96,7 @@ template <typename... Args>
 struct FATAL {
   [[noreturn]] FATAL(const char* fmtarg, Args&&... args,
                      const std::source_location& loc = std::source_location::current()) {
-    (void)endwin();
+    goapp::TextUiSystem::Close();
     std::cerr << fmt::format("\nGoAccess - version {} - {}T{}\n", GO_VERSION, __DATE__, __TIME__);
     std::cerr << fmt::format("Config file: {}\n", conf.iconfigfile ? conf.iconfigfile : NO_CONFIG_FILE);
     std::cerr << "Fatal error has occurred\n";

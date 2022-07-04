@@ -206,7 +206,6 @@ void load_schemes_win(WINDOW* main_win);
 void load_sort_win(WINDOW* main_win, GModule module, GSort* sort);
 void lock_spinner(void);
 void set_curses_spinner(GSpinner* spinner);
-void set_input_opts(void);
 void set_wbkgd(WINDOW* main_win, WINDOW* header_win);
 void term_size(WINDOW* main_win, int* main_win_height);
 void ui_spinner_create(GSpinner* spinner);

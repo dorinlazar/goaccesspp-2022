@@ -71,6 +71,7 @@
 // ------------------
 #include "opsys/osutils.hpp"
 #include "geo/geoip1.h"
+#include "ui/textui.hpp"
 // ------------------
 
 GConf conf;
@@ -176,8 +177,9 @@ static void house_keeping(void) {
 static void cleanup(int ret) {
   /* done, restore tty modes and reset terminal into
    * non-visual mode */
-  if (!conf.output_stdout)
-    endwin();
+  if (!conf.output_stdout) {
+    goapp::TextUiSystem::Close();
+  }
 
   if (!conf.no_progress)
     fprintf(stdout, "Cleaning up resources...\n");
@@ -1404,7 +1406,7 @@ static void set_curses(Logs* logs, int* quit) {
   const char* err_log = NULL;
 
   setup_thread_signals();
-  set_input_opts();
+  goapp::TextUiSystem::Init(conf.mouse_support);
   if (conf.no_color || has_colors() == FALSE) {
     conf.color_scheme = NO_COLOR;
     conf.no_color = 1;

@@ -109,22 +109,6 @@ void init_colors(int force) {
   set_colors(force);
 }
 
-/* Ncurses' window handling */
-void set_input_opts(void) {
-  initscr();
-  clear();
-  noecho();
-  halfdelay(10);
-  nonl();
-  intrflush(stdscr, FALSE);
-  keypad(stdscr, TRUE);
-  if (curs_set(0) == ERR)
-    Log::Debug("Unable to change cursor: {}", strerror(errno));
-
-  if (conf.mouse_support)
-    mousemask(BUTTON1_CLICKED, NULL);
-}
-
 /* Deletes the given window, freeing all memory associated with it. */
 void close_win(WINDOW* w) {
   if (w == NULL)

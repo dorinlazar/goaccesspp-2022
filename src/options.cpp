@@ -697,7 +697,7 @@ void read_option_args(int argc, char** argv) {
       break;
     case 'r': conf.skip_term_resolver = 1; break;
     case 'd': conf.enable_html_resolver = 1; break;
-    case 'm': conf.mouse_support = 1; break;
+    case 'm': conf.mouse_support = true; break;
     case 'M':
       if (strcmp("no", optarg) == 0)
         conf.append_method = 0;

@@ -137,7 +137,7 @@ typedef struct GConf_ {
   int load_conf_dlg;              /* load curses config dialog */
   int load_global_config;         /* use global config file */
   int max_items;                  /* max number of items to output */
-  int mouse_support;              /* add curses mouse support */
+  bool mouse_support;             /* add curses mouse support */
   int no_color;                   /* no terminal colors */
   int no_strict_status;           /* don't enforce 100-599 status codes */
   int no_column_names;            /* don't show col names on termnal */
