@@ -88,8 +88,6 @@ static GWSReader* gwsreader;
 static GDash* dash;
 /* Data holder structure */
 static GHolder* holder;
-/* Old signal mask */
-static sigset_t oldset;
 /* Curses windows */
 static WINDOW *header_win, *main_win;
 
@@ -323,10 +321,8 @@ static void allocate_data(void) {
 }
 
 static void clean_stdscrn(void) {
-  int row, col;
-
-  getmaxyx(stdscr, row, col);
-  draw_header(stdscr, "", "%s", row - 1, 0, col, color_default);
+  goapp::UISize size = goapp::TextUiSystem::ScreenSize();
+  draw_header(stdscr, "", "%s", size.height - 1, 0, size.width, color_default);
 }
 
 /* A wrapper to render all windows within the dashboard. */
@@ -1262,39 +1258,13 @@ static void parse_cmd_line(int argc, char** argv) {
   set_default_static_files();
 }
 
-static void handle_signal_action(GO_UNUSED int sig_number) {
+static void handle_signal_action([[maybe_unused]] int sig_number) {
   fprintf(stderr, "\nSIGINT caught!\n");
   fprintf(stderr, "Closing GoAccess...\n");
 
   if (conf.output_stdout && conf.real_time_html)
     stop_ws_server(gwswriter, gwsreader);
   conf.stop_processing = 1;
-}
-
-static void setup_thread_signals(void) {
-  struct sigaction act;
-
-  act.sa_handler = handle_signal_action;
-  sigemptyset(&act.sa_mask);
-  act.sa_flags = 0;
-
-  sigaction(SIGINT, &act, NULL);
-  sigaction(SIGTERM, &act, NULL);
-  signal(SIGPIPE, SIG_IGN);
-
-  /* Restore old signal mask for the main thread */
-  pthread_sigmask(SIG_SETMASK, &oldset, NULL);
-}
-
-static void block_thread_signals(void) {
-  /* Avoid threads catching SIGINT/SIGPIPE/SIGTERM and handle them in
-   * main thread */
-  sigset_t sigset;
-  sigemptyset(&sigset);
-  sigaddset(&sigset, SIGINT);
-  sigaddset(&sigset, SIGPIPE);
-  sigaddset(&sigset, SIGTERM);
-  pthread_sigmask(SIG_BLOCK, &sigset, &oldset);
 }
 
 /* Initialize various types of data. */
@@ -1395,7 +1365,7 @@ static void set_standard_output(void) {
     if (spawn_ws())
       return;
   }
-  setup_thread_signals();
+  goapp::opsys::SetupThreadSignals(handle_signal_action);
 
   /* Spawn progress spinner thread */
   ui_spinner_create(parsing_spinner);
@@ -1405,7 +1375,7 @@ static void set_standard_output(void) {
 static void set_curses(Logs* logs, int* quit) {
   const char* err_log = NULL;
 
-  setup_thread_signals();
+  goapp::opsys::SetupThreadSignals(handle_signal_action);
   goapp::TextUiSystem::Init(conf.mouse_support);
   if (conf.no_color || has_colors() == FALSE) {
     conf.color_scheme = NO_COLOR;
@@ -1438,7 +1408,7 @@ int main(int argc, char** argv) {
   Logs* logs = NULL;
   int quit = 0, ret = 0;
 
-  block_thread_signals();
+  goapp::opsys::BlockThreadSignals();
 
   /* command line/config options */
   verify_global_config(argc, argv);
@@ -1449,13 +1419,9 @@ int main(int argc, char** argv) {
 
   /* ignore outputting, process only */
   if (conf.process_and_exit) {
-  }
-  /* set stdout */
-  else if (conf.output_stdout) {
+  } else if (conf.output_stdout) { /* set stdout */
     set_standard_output();
-  }
-  /* set curses */
-  else {
+  } else { /* set curses */
     set_curses(logs, &quit);
   }
 

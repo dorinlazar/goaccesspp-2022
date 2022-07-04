@@ -229,14 +229,8 @@ static char* render_child_node(const char* data) {
  * On success, the newly allocated string representing the chart is
  * returned. */
 static char* get_bars(int n, int max, int x) {
-  int w, h;
-  float len = 0.0;
-
-  getmaxyx(stdscr, h, w);
-  (void)h; /* avoid lint warning */
-
-  len = ((((float)n) / max));
-  len *= (w - x);
+  goapp::UISize size = goapp::TextUiSystem::ScreenSize();
+  int len = (n * (size.width - x)) / max;
   if (len < 1)
     len = 1;
   return char_repeat(len, '|');

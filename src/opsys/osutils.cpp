@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <libintl.h>
+#include <signal.h>
 
 #include "error.hpp"
 
@@ -47,6 +48,34 @@ void UpdateLocale(void) {
     setlocale(LC_CTYPE, loc_ctype);
   else
     setlocale(LC_CTYPE, "");
+}
+
+static sigset_t oldset;
+
+void BlockThreadSignals() {
+  /* Avoid threads catching SIGINT/SIGPIPE/SIGTERM and handle them in
+   * main thread */
+  sigset_t sigset;
+  sigemptyset(&sigset);
+  sigaddset(&sigset, SIGINT);
+  sigaddset(&sigset, SIGPIPE);
+  sigaddset(&sigset, SIGTERM);
+  pthread_sigmask(SIG_BLOCK, &sigset, &oldset);
+}
+
+void SetupThreadSignals(void (*handle_signal_action)(int)) {
+  struct sigaction act;
+
+  act.sa_handler = handle_signal_action;
+  sigemptyset(&act.sa_mask);
+  act.sa_flags = 0;
+
+  sigaction(SIGINT, &act, NULL);
+  sigaction(SIGTERM, &act, NULL);
+  signal(SIGPIPE, SIG_IGN);
+
+  /* Restore old signal mask for the main thread */
+  pthread_sigmask(SIG_SETMASK, &oldset, NULL);
 }
 
 } // namespace goapp::opsys
