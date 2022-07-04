@@ -1335,7 +1335,7 @@ static const char** get_color_schemes(size_t* size) {
   const char** opts = (const char**)xmalloc(sizeof(char*) * n);
 
   for (i = 0, j = 0; i < n; ++i) {
-    if (!conf.color_idx && !strcmp("Custom Scheme", choices[i]))
+    if (conf.colors.size() != 0 && !strcmp("Custom Scheme", choices[i]))
       continue;
     if (COLORS < 256 && !strcmp("Monokai", choices[i]))
       continue;

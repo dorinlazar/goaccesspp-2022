@@ -74,7 +74,7 @@ static GEnum CSTM_COLORS[] = {
     {"COLOR_PROGRESS", COLOR_PROGRESS},
 };
 
-static const char* colors256_mono[] = {
+static std::vector<std::string> colors256_mono = {
     "COLOR_MTRC_HITS              color7:color-1",
     "COLOR_MTRC_VISITORS          color8:color-1",
     "COLOR_MTRC_DATA              color7:color-1",
@@ -112,7 +112,7 @@ static const char* colors256_mono[] = {
     "COLOR_PROGRESS               color0:color6",
 };
 
-static const char* colors256_green[] = {
+static std::vector<std::string> colors256_green = {
     "COLOR_MTRC_HITS              color7:color-1",
     "COLOR_MTRC_VISITORS          color8:color-1",
     "COLOR_MTRC_DATA              color7:color-1",
@@ -150,7 +150,7 @@ static const char* colors256_green[] = {
     "COLOR_PROGRESS               color0:color6",
 };
 
-static const char* colors256_monokai[] = {
+static std::vector<std::string> colors256_monokai = {
     "COLOR_MTRC_HITS              color197:color-1",
     "COLOR_MTRC_VISITORS          color148:color-1",
     "COLOR_MTRC_DATA              color7:color-1",
@@ -188,7 +188,7 @@ static const char* colors256_monokai[] = {
     "COLOR_PROGRESS               color7:color141",
 };
 
-static const char* colors8_mono[] = {
+static std::vector<std::string> colors8_mono = {
     "COLOR_MTRC_HITS              color7:color-1",
     "COLOR_MTRC_VISITORS          color0:color-1 bold",
     "COLOR_MTRC_DATA              color7:color-1",
@@ -226,7 +226,7 @@ static const char* colors8_mono[] = {
     "COLOR_PROGRESS               color0:color6",
 };
 
-static const char* colors8_green[] = {
+static std::vector<std::string> colors8_green = {
     "COLOR_MTRC_HITS              color7:color-1",
     "COLOR_MTRC_VISITORS          color0:color-1 bold",
     "COLOR_MTRC_DATA              color7:color-1",
@@ -264,7 +264,7 @@ static const char* colors8_green[] = {
     "COLOR_PROGRESS               color0:color6",
 };
 
-static const char* nocolors[] = {
+static std::vector<std::string> nocolors = {
     "COLOR_MTRC_HITS              color0:color-1",         "COLOR_MTRC_VISITORS          color0:color-1",
     "COLOR_MTRC_DATA              color0:color-1",         "COLOR_MTRC_BW                color0:color-1",
     "COLOR_MTRC_AVGTS             color0:color-1",         "COLOR_MTRC_CUMTS             color0:color-1",
@@ -579,10 +579,11 @@ GColors* get_color_by_item_module(GColorItem item, GModule module) {
  *
  * On error, it aborts.
  * On success, the color properties are assigned */
-static void parse_color_line(GColorPair* pair, GColors* color, char* line) {
+static void parse_color_line(GColorPair* pair, GColors* color, const std::string& src_line) {
   char* val;
   int item = 0;
   size_t idx;
+  auto line = strdup(src_line.c_str()); // TODO fix parsing because it's shit.
 
   /* key */
   idx = strcspn(line, " \t");
@@ -611,6 +612,7 @@ static void parse_color_line(GColorPair* pair, GColors* color, char* line) {
     FATAL("Invalid color module at: {} {}", line, val);
 
   color->item = (GColorItem)item;
+  free(line);
 }
 
 /* Attempt to prepend the given color on our color linked list.
@@ -640,7 +642,7 @@ static void prepend_color(GColors** color) {
  *
  * On error, it aborts.
  * On success, the color properties are stored */
-static void parse_color(char* line) {
+static void parse_color(const std::string& line) {
   GSLList* match = NULL;
   GColors* color = NULL;
   GColorPair* pair = NULL;
@@ -673,26 +675,17 @@ static void parse_color(char* line) {
   /* if no color pair was found, then we init the color pair */
   if (!match && color)
     init_pair(color->pair->idx, color->pair->fg, color->pair->bg);
-
-  free(line);
 }
 
 /* Iterate over all color definitions in the config file.
  *
  * On error, it aborts.
  * On success, the color properties are parsed and stored */
-static void parse_colors(const char* colors[], size_t n) {
-  char* line;
-  size_t i;
-
-  for (i = 0; i < n; ++i) {
-    line = strdup(colors[i]);
-    /* did not find a valid format */
-    if (strchr(line, ':') == NULL) {
-      free(line);
-      continue;
+static void parse_colors(const std::vector<std::string>& colors) {
+  for (auto color: colors) {
+    if (color.find(':') != std::string::npos) {
+      parse_color(color);
     }
-    parse_color(line);
   }
 }
 
@@ -700,33 +693,33 @@ static void parse_colors(const char* colors[], size_t n) {
 static void add_default_colors(void) {
   /* no colors */
   if (COLORS < 8)
-    parse_colors(nocolors, ARRAY_SIZE(nocolors));
+    parse_colors(nocolors);
 
   /* 256 colors, and no color scheme set or set to monokai */
   if (COLORS == 256 && (!conf.color_scheme || conf.color_scheme == MONOKAI))
-    parse_colors(colors256_monokai, ARRAY_SIZE(colors256_monokai));
+    parse_colors(colors256_monokai);
   /* otherwise use 16 colors scheme */
   else if (COLORS > 16) {
     if (conf.color_scheme == STD_GREEN)
-      parse_colors(colors256_green, ARRAY_SIZE(colors256_green));
+      parse_colors(colors256_green);
     else
-      parse_colors(colors256_mono, ARRAY_SIZE(colors256_mono));
+      parse_colors(colors256_mono);
   }
 
   /* 8 colors */
   if (COLORS >= 8 && COLORS <= 16) {
     if (conf.color_scheme == STD_GREEN)
-      parse_colors(colors8_green, ARRAY_SIZE(colors8_green));
+      parse_colors(colors8_green);
     else
-      parse_colors(colors8_mono, ARRAY_SIZE(colors8_mono));
+      parse_colors(colors8_mono);
   }
 }
 
 /* Entry point to parse color definitions or use default colors */
 void set_colors(int force) {
   errno = 0;
-  if (conf.color_idx > 0 && !force)
-    parse_colors(conf.colors, conf.color_idx);
+  if (conf.colors.size() > 0 && !force)
+    parse_colors(conf.colors);
   else
     add_default_colors();
 }

@@ -3,6 +3,8 @@
 #define SETTINGS_H_INCLUDED
 
 #include <stdint.h>
+#include <vector>
+#include <string>
 #include "commons.h"
 
 #define MAX_LINE_CONF 4096
@@ -63,9 +65,9 @@ typedef struct GPreConfLog_ {
 } GPreConfLog;
 
 /* All configuration properties */
-typedef struct GConf_ {
+struct GConf {
   /* Array options */
-  const char* colors[MAX_CUSTOM_COLORS];        /* colors */
+  std::vector<std::string> colors;
   const char* enable_panels[TOTAL_MODULES];     /* array of panels to enable */
   const char* filenames[MAX_FILENAMES];         /* log files */
   const char* hide_referers[MAX_IGNORE_REF];    /* hide referrers from report */
@@ -76,6 +78,8 @@ typedef struct GConf_ {
   const char* output_formats[MAX_OUTFORMATS];   /* output format, e.g. , HTML */
   const char* sort_panels[TOTAL_MODULES];       /* sorting options for each panel */
   const char* static_files[MAX_EXTENSIONS];     /* static extensions */
+
+  void PushUniqueToArray(const std::string& value, std::vector<std::string>&);
 
   /* Log/date/time formats */
   const char* tz_name;             /* Canonical TZ name, e.g., America/Chicago */
@@ -172,7 +176,6 @@ typedef struct GConf_ {
   int tailing_mode;    /* in tailing-mode? */
 
   /* Array indices */
-  int color_idx;          /* colors index */
   int enable_panel_idx;   /* enable panels index */
   int filenames_idx;      /* filenames index */
   int hide_referer_idx;   /* hide referrers index */
@@ -186,8 +189,7 @@ typedef struct GConf_ {
   int browsers_hash_idx;  /* browsers hash index */
 
   size_t static_file_max_len = 0;
-
-} GConf;
+};
 
 char* get_selected_date_str(size_t idx);
 char* get_selected_format_str(size_t idx);

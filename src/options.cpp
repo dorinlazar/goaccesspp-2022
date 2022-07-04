@@ -307,8 +307,9 @@ static void parse_long_opt(const char* name, const char* oarg) {
   /* USER INTERFACE OPTIONS
    * ========================= */
   /* colors */
-  if (!strcmp("color", name))
-    set_array_opt(oarg, conf.colors, &conf.color_idx, MAX_CUSTOM_COLORS);
+  if (!strcmp("color", name)) {
+    conf.PushUniqueToArray(oarg, conf.colors);
+  }
 
   /* color scheme */
   if (!strcmp("color-scheme", name))
