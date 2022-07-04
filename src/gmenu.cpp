@@ -36,15 +36,13 @@
 #include "gmenu.h"
 
 #include "xmalloc.h"
-#include "ui.h"
+#include "ui/ui.h"
 
 /* Allocate memory for a new GMenu instance.
  *
  * On success, the newly allocated GMenu is returned . */
-GMenu *
-new_gmenu(WINDOW *parent, int h, int w, int y, int x)
-{
-  GMenu *menu = (GMenu *)xmalloc(sizeof(GMenu));
+GMenu* new_gmenu(WINDOW* parent, int h, int w, int y, int x) {
+  GMenu* menu = (GMenu*)xmalloc(sizeof(GMenu));
 
   memset(menu, 0, sizeof *menu);
   menu->count = 0;
@@ -64,22 +62,16 @@ new_gmenu(WINDOW *parent, int h, int w, int y, int x)
 }
 
 /* Render actual menu item */
-static void
-draw_menu_item(GMenu *menu, char *s, int x, int y, int w, int checked,
-               GColors *(*func)(void))
-{
+static void draw_menu_item(GMenu* menu, char* s, int x, int y, int w, int checked, GColors* (*func)(void)) {
   char check, *lbl = NULL;
 
-  if (menu->selectable)
-  {
+  if (menu->selectable) {
     check = checked ? 'x' : ' ';
-    lbl = (char *)xmalloc(snprintf(NULL, 0, "[%c] %s", check, s) + 1);
+    lbl = (char*)xmalloc(snprintf(NULL, 0, "[%c] %s", check, s) + 1);
     sprintf(lbl, "[%c] %s", check, s);
     draw_header(menu->win, lbl, "%s", y, x, w, (*func));
     free(lbl);
-  }
-  else
-  {
+  } else {
     draw_header(menu->win, s, "%s", y, x, w, (*func));
   }
 }
@@ -89,9 +81,8 @@ draw_menu_item(GMenu *menu, char *s, int x, int y, int w, int checked,
  * On error, 1 is returned.
  * On success, the newly created menu is added to the window and 0 is
  * returned. */
-int post_gmenu(GMenu *menu)
-{
-  GColors *(*func)(void);
+int post_gmenu(GMenu* menu) {
+  GColors* (*func)(void);
   int i = 0, j = 0, start, end, height, total, checked = 0;
 
   if (menu == NULL)
@@ -104,8 +95,7 @@ int post_gmenu(GMenu *menu)
   total = menu->size;
   end = height < total ? start + height : total;
 
-  for (i = start; i < end; i++, j++)
-  {
+  for (i = start; i < end; i++, j++) {
     func = i == menu->idx ? color_selected : color_default;
     checked = menu->items[i].checked ? 1 : 0;
     draw_menu_item(menu, menu->items[i].name, 0, j, menu->w, checked, func);
@@ -116,12 +106,10 @@ int post_gmenu(GMenu *menu)
 }
 
 /* Main work horse of the menu system processing input events */
-void gmenu_driver(GMenu *menu, int c)
-{
+void gmenu_driver(GMenu* menu, int c) {
   int i;
 
-  switch (c)
-  {
+  switch (c) {
   case REQ_DOWN:
     if (menu->idx >= menu->size - 1)
       break;
@@ -139,8 +127,7 @@ void gmenu_driver(GMenu *menu, int c)
     post_gmenu(menu);
     break;
   case REQ_SEL:
-    if (!menu->multiple)
-    {
+    if (!menu->multiple) {
       for (i = 0; i < menu->size; i++)
         menu->items[i].checked = 0;
     }

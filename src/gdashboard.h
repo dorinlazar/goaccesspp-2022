@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-#include "ui.h"
+#include "ui/ui.h"
 
 #define DASH_HEAD_POS 0   /* position of header line */
 #define DASH_EMPTY_POS 1  /* empty line position */

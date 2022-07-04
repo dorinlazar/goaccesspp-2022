@@ -45,7 +45,7 @@
 #include "websocket/gwsocket.h"
 #include "json.h"
 #include "settings.h"
-#include "ui.h"
+#include "ui/ui.h"
 #include "util.h"
 #include "xmalloc.h"
 

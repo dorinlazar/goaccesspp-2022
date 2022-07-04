@@ -48,7 +48,7 @@
 #include "error.hpp"
 #include "gkhash.h"
 #include "settings.h"
-#include "ui.h"
+#include "ui/ui.h"
 #include "util.h"
 #include "websocket/websocket.h"
 #include "xmalloc.h"
