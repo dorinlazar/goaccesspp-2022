@@ -454,26 +454,26 @@ static void poverall_log_size(GJSON* json, int sp) {
  * object. */
 static void poverall_bandwidth(GJSON* json, int sp) { pskeyu64val(json, OVERALL_BANDWIDTH, ht_sum_bw(), sp, 0); }
 
-static void poverall_log_path(GJSON* json, int idx, int isp) {
+static void poverall_log_path(GJSON* json, size_t idx, int isp) {
   pjson(json, "%.*s\"", isp, TAB);
   if (conf.filenames[idx][0] == '-' && conf.filenames[idx][1] == '\0')
     pjson(json, "STDIN");
   else
-    escape_json_output(json, conf.filenames[idx]);
-  pjson(json, conf.filenames_idx - 1 != idx ? "\",\n" : "\"");
+    escape_json_output(json, conf.filenames[idx].c_str());
+  pjson(json, conf.filenames.size() - 1 != idx ? "\",\n" : "\"");
 }
 
 /* Write to a buffer the path of the log being parsed under the
  * overall object. */
 static void poverall_log(GJSON* json, int sp) {
-  int idx, isp = 0;
+  size_t idx, isp = 0;
 
   /* use tabs to prettify output */
   if (conf.json_pretty_print)
     isp = sp + 1;
 
   popen_arr_attr(json, OVERALL_LOG, sp);
-  for (idx = 0; idx < conf.filenames_idx; ++idx)
+  for (idx = 0; idx < conf.filenames.size(); ++idx)
     poverall_log_path(json, idx, isp);
   pclose_arr(json, sp, 1);
 }

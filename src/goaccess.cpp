@@ -1148,7 +1148,7 @@ static void standard_output(Logs* logs) {
   if (find_output_type(&json, "json", 1) == 0)
     output_json(holder, json);
   /* HTML */
-  if (find_output_type(&html, "html", 1) == 0 || conf.output_format_idx == 0)
+  if (find_output_type(&html, "html", 1) == 0 || conf.output_formats.size() == 0)
     process_html(logs, html);
 
   free(csv);
@@ -1243,7 +1243,7 @@ out2:
 static void set_io(FILE** pipe) {
   /* For backwards compatibility, check if we are not outputting to a
    * terminal or if an output format was supplied */
-  if (!isatty(STDOUT_FILENO) || conf.output_format_idx > 0)
+  if (!isatty(STDOUT_FILENO) || conf.output_formats.size() > 0)
     conf.output_stdout = 1;
   /* dup fd if data piped */
   if (!isatty(STDIN_FILENO))
@@ -1288,7 +1288,7 @@ static Logs* initializer(void) {
   set_io(&pipe);
 
   /* init glog */
-  if (!(logs = init_logs(conf.filenames_idx)))
+  if (!(logs = init_logs(conf.filenames.size())))
     FATAL(ERR_NO_DATA_PASSED);
 
   for (i = 0; i < logs->size; ++i)
@@ -1355,7 +1355,7 @@ static void set_standard_output(void) {
   int html = 0;
 
   /* HTML */
-  if (find_output_type(NULL, "html", 0) == 0 || conf.output_format_idx == 0)
+  if (find_output_type(NULL, "html", 0) == 0 || conf.output_formats.size() == 0)
     html = 1;
 
   /* Spawn WebSocket server threads */

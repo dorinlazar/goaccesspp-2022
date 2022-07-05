@@ -33,6 +33,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <algorithm>
 
 #include "commons.h"
 
@@ -102,7 +103,7 @@ int get_max_choices(void) {
   /* HTML - takes priority on cases where multiple outputs were given. Note that
    * we check either for an .html extension or we assume not extension was passed
    * via -o and therefore we are redirecting the output to a file. */
-  if (find_output_type(&html, "html", 1) == 0 || conf.output_format_idx == 0)
+  if (find_output_type(&html, "html", 1) == 0 || conf.output_formats.size() == 0)
     max = conf.max_items;
 
   free(csv);
@@ -228,10 +229,10 @@ int has_timestamp(const char* fmt) {
  *
  * If enabled, 1 is returned, else 0 is returned. */
 int enable_panel(GModule mod) {
-  int i, module;
+  int module;
 
-  for (i = 0; i < conf.enable_panel_idx; ++i) {
-    if ((module = get_module_enum(conf.enable_panels[i])) == -1)
+  for (auto panel: conf.enable_panels) {
+    if ((module = get_module_enum(panel.c_str())) == -1)
       continue;
     if (mod == (unsigned int)module) {
       return 1;
@@ -245,10 +246,10 @@ int enable_panel(GModule mod) {
  *
  * If ignored, 1 is returned, else 0 is returned. */
 int ignore_panel(GModule mod) {
-  int i, module;
+  int module;
 
-  for (i = 0; i < conf.ignore_panel_idx; ++i) {
-    if ((module = get_module_enum(conf.ignore_panels[i])) == -1)
+  for (auto panel: conf.ignore_panels) {
+    if ((module = get_module_enum(panel.c_str())) == -1)
       continue;
     if (mod == (unsigned int)module) {
       return 1;
@@ -339,35 +340,39 @@ int get_prev_module(GModule module) {
  * Note: This overwrites --enable-panel since it assumes there's
  * truly nothing to do with the panel */
 void verify_panels(void) {
-  int ignore_panel_idx = conf.ignore_panel_idx;
-
   /* Remove virtual host panel if no '%v' within log format */
   if (!conf.log_format)
     return;
 
-  if (!strstr(conf.log_format, "%v") && ignore_panel_idx < TOTAL_MODULES) {
-    if (str_inarray("VIRTUAL_HOSTS", conf.ignore_panels, ignore_panel_idx) < 0)
+  if (!strstr(conf.log_format, "%v")) {
+    if (!conf.ignore_panels.contains("VIRTUAL_HOSTS")) {
       remove_module(VIRTUAL_HOSTS);
+    }
   }
-  if (!strstr(conf.log_format, "%e") && ignore_panel_idx < TOTAL_MODULES) {
-    if (str_inarray("REMOTE_USER", conf.ignore_panels, ignore_panel_idx) < 0)
+  if (!strstr(conf.log_format, "%e")) {
+    if (!conf.ignore_panels.contains("REMOTE_USER")) {
       remove_module(REMOTE_USER);
+    }
   }
-  if (!strstr(conf.log_format, "%C") && ignore_panel_idx < TOTAL_MODULES) {
-    if (str_inarray("CACHE_STATUS", conf.ignore_panels, ignore_panel_idx) < 0)
+  if (!strstr(conf.log_format, "%C")) {
+    if (!conf.ignore_panels.contains("CACHE_STATUS")) {
       remove_module(CACHE_STATUS);
+    }
   }
-  if (!strstr(conf.log_format, "%M") && ignore_panel_idx < TOTAL_MODULES) {
-    if (str_inarray("MIME_TYPE", conf.ignore_panels, ignore_panel_idx) < 0)
+  if (!strstr(conf.log_format, "%M")) {
+    if (!conf.ignore_panels.contains("MIME_TYPE")) {
       remove_module(MIME_TYPE);
+    }
   }
-  if (!strstr(conf.log_format, "%K") && ignore_panel_idx < TOTAL_MODULES) {
-    if (str_inarray("TLS_TYPE", conf.ignore_panels, ignore_panel_idx) < 0)
+  if (!strstr(conf.log_format, "%K")) {
+    if (!conf.ignore_panels.contains("TLS_TYPE")) {
       remove_module(TLS_TYPE);
+    }
   }
-  if (!conf.geoip_database && ignore_panel_idx < TOTAL_MODULES) {
-    if (str_inarray("GEO_LOCATION", conf.ignore_panels, ignore_panel_idx) < 0)
+  if (!conf.geoip_database) {
+    if (!conf.ignore_panels.contains("GEO_LOCATION")) {
       remove_module(GEO_LOCATION);
+    }
   }
 }
 
@@ -398,18 +403,15 @@ int init_modules(void) {
  * On success, it adds up all log sizes and its value is returned.
  * if --log-size was specified, it will be returned explicitly */
 intmax_t get_log_sizes(void) {
-  int i;
   off_t size = 0;
 
   /* --log-size */
   if (conf.log_size > 0)
     return (intmax_t)conf.log_size;
 
-  for (i = 0; i < conf.filenames_idx; ++i) {
-    if (conf.filenames[i][0] == '-' && conf.filenames[i][1] == '\0')
-      size += 0;
-    else
-      size += file_size(conf.filenames[i]);
+  for (auto filename: conf.filenames) {
+    if (filename != "-")
+      size += file_size(filename.c_str());
   }
 
   return (intmax_t)size;
@@ -419,23 +421,25 @@ intmax_t get_log_sizes(void) {
  *
  * On success, a newly malloc'd string containing the log source either
  * from filename(s) and/or STDIN is returned. */
-char* get_log_source_str(int max_len) {
-  char* str = xstrdup("");
-  int i, len = 0;
+std::string get_log_source_str(size_t max_len) {
+  std::string str;
+  bool first = true;
 
-  for (i = 0; i < conf.filenames_idx; ++i) {
-    if (conf.filenames[i][0] == '-' && conf.filenames[i][1] == '\0')
-      append_str(&str, "STDIN");
+  for (auto filename: conf.filenames) {
+    if (first) {
+      first = false;
+    } else {
+      str += "; ";
+    }
+    if (filename == "-")
+      str += "STDIN";
     else
-      append_str(&str, conf.filenames[i]);
-    if (i != conf.filenames_idx - 1)
-      append_str(&str, "; ");
+      str += filename;
   }
 
-  len = strlen(str);
-  if (max_len > 0 && len > 0 && len > max_len) {
-    str[max_len - 3] = 0;
-    append_str(&str, "...");
+  if (max_len >= 3 && str.size() > max_len) {
+    str = str.substr(0, max_len - 3);
+    str += "...";
   }
 
   return str;

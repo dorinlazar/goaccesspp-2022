@@ -406,10 +406,9 @@ int can_sort_module(GModule module, int field) {
  * On error, function returns.
  * On success, panel metrics are sorted. */
 void parse_initial_sort(void) {
-  int i;
   char module[SORT_MODULE_LEN], field[SORT_FIELD_LEN], order[SORT_ORDER_LEN];
-  for (i = 0; i < conf.sort_panel_idx; ++i) {
-    if (sscanf(conf.sort_panels[i], "%15[^','],%11[^','],%4s", module, field, order) != 3)
+  for (auto panel: conf.sort_panels) {
+    if (sscanf(panel.c_str(), "%15[^','],%11[^','],%4s", module, field, order) != 3)
       continue;
     set_initial_sort(module, field, order);
   }

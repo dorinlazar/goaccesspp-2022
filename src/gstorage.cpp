@@ -583,7 +583,7 @@ void count_process_and_invalid(GLog* glog, const char* line) {
  * If IP not range, 1 is returned.
  * If IP is excluded, 0 is returned. */
 int excluded_ip(GLogItem* logitem) {
-  if (conf.ignore_ip_idx && ip_in_range(logitem->host)) {
+  if (conf.ignore_ips.size() > 0 && ip_in_range(logitem->host)) {
     ht_inc_cnt_overall("excluded_ip", 1);
     return 0;
   }

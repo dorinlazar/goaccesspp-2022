@@ -205,19 +205,19 @@ static int wc_match(const char* wc, char* str) {
  * On success, or if the host needs to be ignored, 1 is returned */
 int ignore_referer(const char* host) {
   char* needle = NULL;
-  int i, ignore = 0;
+  int ignore = 0;
 
-  if (conf.ignore_referer_idx == 0)
+  if (conf.ignore_referers.size() == 0)
     return 0;
   if (host == NULL || *host == '\0')
     return 0;
 
   needle = xstrdup(host);
-  for (i = 0; i < conf.ignore_referer_idx; ++i) {
-    if (conf.ignore_referers[i] == NULL || *conf.ignore_referers[i] == '\0')
+  for (auto ref: conf.ignore_referers) {
+    if (ref.size() == 0)
       continue;
 
-    if (wc_match(conf.ignore_referers[i], needle)) {
+    if (wc_match(ref.c_str(), needle)) {
       ignore = 1;
       goto out;
     }
@@ -235,19 +235,19 @@ out:
  * On success, or if the host needs to be ignored, 1 is returned */
 int hide_referer(const char* host) {
   char* needle = NULL;
-  int i, ignore = 0;
+  int ignore = 0;
 
-  if (conf.hide_referer_idx == 0)
+  if (conf.hide_referers.size() == 0)
     return 0;
   if (host == NULL || *host == '\0')
     return 0;
 
   needle = xstrdup(host);
-  for (i = 0; i < conf.hide_referer_idx; ++i) {
-    if (conf.hide_referers[i] == NULL || *conf.hide_referers[i] == '\0')
+  for (auto ref: conf.hide_referers) {
+    if (ref.size() == 0)
       continue;
 
-    if (wc_match(conf.hide_referers[i], needle)) {
+    if (wc_match(ref.c_str(), needle)) {
       ignore = 1;
       goto out;
     }
@@ -302,14 +302,13 @@ static int within_range(const char* ip, const char* start, const char* end) {
  * On success, or if within the range, 1 is returned */
 int ip_in_range(const char* ip) {
   char *start, *end, *dash;
-  int i;
 
-  for (i = 0; i < conf.ignore_ip_idx; ++i) {
+  for (auto ignore_ip: conf.ignore_ips) {
     end = NULL;
-    if (conf.ignore_ips[i] == NULL || *conf.ignore_ips[i] == '\0')
+    if (ignore_ip.size() == 0)
       continue;
 
-    start = xstrdup(conf.ignore_ips[i]);
+    start = xstrdup(ignore_ip.c_str());
     /* split range */
     if ((dash = strchr(start, '-')) != NULL) {
       *dash = '\0';
@@ -623,19 +622,6 @@ const char* verify_status_code(char* str) {
       return _(codes[i][1]);
 
   return "Unknown";
-}
-
-/* Checks if the given string is within the given array.
- *
- * If not found, -1 is returned.
- * If found, the key for needle in the array is returned. */
-int str_inarray(const char* s, const char* arr[], int size) {
-  int i;
-  for (i = 0; i < size; i++) {
-    if (strcmp(arr[i], s) == 0)
-      return i;
-  }
-  return -1;
 }
 
 /* Strip whitespace from the beginning of a string.

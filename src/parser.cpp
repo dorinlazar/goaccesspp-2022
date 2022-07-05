@@ -116,7 +116,7 @@ Logs* init_logs(int size) {
   glog = (GLog*)xcalloc(size, sizeof(*glog));
   for (i = 0; i < size; ++i) {
     glog[i].errors = (char**)xcalloc(MAX_LOG_ERRORS, sizeof(char*));
-    glog[i].filename = xstrdup(conf.filenames[i]);
+    glog[i].filename = xstrdup(conf.filenames[i].c_str());
 
     logs->processed = &(glog[i].processed);
     logs->filename = glog[i].filename;
@@ -407,28 +407,25 @@ clean:
  * On success, the 1 is returned. */
 static int verify_static_content(const char* req) {
   const char* nul = NULL;
-  const char *ext = NULL, *pch = NULL;
-  int elen = 0, i;
+  const char* pch = NULL;
 
   if ((req == NULL) || (*req == '\0'))
     return 0;
 
   nul = req + strlen(req);
 
-  for (i = 0; i < conf.static_file_idx; ++i) {
-    ext = conf.static_files[i];
-    if (ext == NULL || *ext == '\0')
+  for (auto ext: conf.static_files) {
+    if (ext.size() == 0)
       continue;
 
-    elen = strlen(ext);
-    if (conf.all_static_files && (pch = strchr(req, '?')) != NULL && pch - req > elen) {
-      pch -= elen;
-      if (0 == strncasecmp(ext, pch, elen))
+    if (conf.all_static_files && (pch = strchr(req, '?')) != NULL && (size_t)(pch - req) > ext.size()) {
+      pch -= ext.size();
+      if (0 == strncasecmp(ext.c_str(), pch, ext.size()))
         return 1;
       continue;
     }
 
-    if (nul - req > elen && !strncasecmp(nul - elen, ext, elen))
+    if ((size_t)(nul - req) > ext.size() && !strncasecmp(nul - ext.size(), ext.c_str(), ext.size()))
       return 1;
   }
 
@@ -1472,13 +1469,11 @@ static int is_static(const char* req) { return verify_static_content(req); }
  *
  * If the status code is not within the ignore-array, 0 is returned.
  * If the status code is within the ignore-array, 1 is returned. */
-static int ignore_status_code(const char* status) {
-  if (!status || conf.ignore_status_idx == 0)
-    return 0;
+static bool ignore_status_code(const char* status) {
+  if (!status)
+    return false;
 
-  if (str_inarray(status, conf.ignore_status, conf.ignore_status_idx) != -1)
-    return 1;
-  return 0;
+  return conf.ignore_status.contains(status);
 }
 
 /* Determine if static file request should be ignored
@@ -1972,7 +1967,7 @@ int parse_log(Logs* logs, int dry_run) {
     logs->restored = rebuild_rawdata_cache();
 
   /* no data piped, no logs passed, load from disk only then */
-  if (conf.restore && !conf.filenames_idx && !conf.read_stdin) {
+  if (conf.restore && conf.filenames.size() == 0 && !conf.read_stdin) {
     logs->load_from_disk_only = 1;
     return 0;
   }

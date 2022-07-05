@@ -189,7 +189,6 @@ static void print_csv_data(FILE* fp, GHolder* h, GPercTotals totals) {
 /* Output general statistics information. */
 static void print_csv_summary(FILE* fp) {
   char now[DATE_TIME];
-  char* source = NULL;
   const char* fmt;
   int i = 0;
   uint64_t total = 0;
@@ -254,11 +253,8 @@ static void print_csv_summary(FILE* fp) {
   fmt = "\"%d\",,\"%s\",,,,,,,,\"%" PRIu64 "\",\"%s\"\r\n";
   fprintf(fp, fmt, i++, GENER_ID, ht_sum_bw(), OVERALL_BANDWIDTH);
 
-  /* log path */
-  source = get_log_source_str(0);
   fmt = "\"%d\",,\"%s\",,,,,,,,\"%s\",\"%s\"\r\n";
-  fprintf(fp, fmt, i++, GENER_ID, source, OVERALL_LOG);
-  free(source);
+  fprintf(fp, fmt, i++, GENER_ID, get_log_source_str(0).c_str(), OVERALL_LOG);
 }
 
 #pragma GCC diagnostic warning "-Wformat-nonliteral"

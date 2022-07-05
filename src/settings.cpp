@@ -144,13 +144,13 @@ void set_default_static_files(void) {
       ".tar ", ".tgz ", ".tiff", ".tif ", ".ttf ",  ".flv ", ".avi",
   };
 
-  if (conf.static_file_idx > 0)
+  if (conf.static_files.size() > 0)
     return;
 
   for (i = 0; i < ARRAY_SIZE(exts); i++) {
     if (conf.static_file_max_len < strlen(exts[i]))
       conf.static_file_max_len = strlen(exts[i]);
-    conf.static_files[conf.static_file_idx++] = exts[i];
+    conf.static_files.push_back(exts[i]);
   }
 }
 
@@ -851,3 +851,5 @@ void GConf::PushUniqueToArray(const std::string& value, std::vector<std::string>
     arr.push_back(value);
   }
 }
+
+void GConf::PushUniqueToArray(const std::string& value, std::unordered_set<std::string>& arr) { arr.insert(value); }

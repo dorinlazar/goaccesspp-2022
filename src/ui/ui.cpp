@@ -373,7 +373,7 @@ static char* get_str_filesize(void) { return filesize_str(get_log_sizes()); }
  * On success, the log file path as a string is returned. */
 static char* get_str_logfile(void) {
   int col = getmaxx(stdscr), left_padding = 20;
-  return get_log_source_str(col - left_padding);
+  return xstrdup(get_log_source_str(col - left_padding).c_str());
 }
 
 /* Get the bandwidth in a human readable format.

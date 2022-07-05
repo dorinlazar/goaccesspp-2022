@@ -1,7 +1,6 @@
 #pragma once
-#ifndef COMMONS_H_INCLUDED
-#define COMMONS_H_INCLUDED
 
+#include <string>
 #include <time.h>
 #include <stdint.h>
 #include "gslist.h"
@@ -209,11 +208,9 @@ int remove_module(GModule module);
 uint32_t get_num_modules(void);
 void verify_panels(void);
 
-char* get_log_source_str(int max_len);
+std::string get_log_source_str(size_t max_len);
 intmax_t get_log_sizes(void);
 
 void display_default_config_file(void);
 void display_storage(void);
 void display_version(void);
-
-#endif

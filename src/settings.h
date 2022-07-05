@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <vector>
 #include <string>
+#include <unordered_set>
 #include "commons.h"
 
 #define MAX_LINE_CONF 4096
@@ -68,18 +69,19 @@ typedef struct GPreConfLog_ {
 struct GConf {
   /* Array options */
   std::vector<std::string> colors;
-  const char* enable_panels[TOTAL_MODULES];     /* array of panels to enable */
-  const char* filenames[MAX_FILENAMES];         /* log files */
-  const char* hide_referers[MAX_IGNORE_REF];    /* hide referrers from report */
-  const char* ignore_ips[MAX_IGNORE_IPS];       /* array of ips to ignore */
-  const char* ignore_panels[TOTAL_MODULES];     /* array of panels to ignore */
-  const char* ignore_referers[MAX_IGNORE_REF];  /* referrers to ignore */
-  const char* ignore_status[MAX_IGNORE_STATUS]; /* status to ignore */
-  std::vector<std::string> output_formats;      /* output format, e.g. , HTML */
-  const char* sort_panels[TOTAL_MODULES];       /* sorting options for each panel */
-  const char* static_files[MAX_EXTENSIONS];     /* static extensions */
+  std::vector<std::string> enable_panels;        /* array of panels to enable */
+  std::vector<std::string> filenames;            /* log files */
+  std::vector<std::string> hide_referers;        /* hide referrers from report */
+  std::vector<std::string> ignore_ips;           /* array of ips to ignore */
+  std::unordered_set<std::string> ignore_panels; /* array of panels to ignore */
+  std::vector<std::string> ignore_referers;      /* referrers to ignore */
+  std::unordered_set<std::string> ignore_status; /* status to ignore */
+  std::vector<std::string> output_formats;       /* output format, e.g. , HTML */
+  std::vector<std::string> sort_panels;          /* sorting options for each panel */
+  std::vector<std::string> static_files;         /* static extensions */
 
   void PushUniqueToArray(const std::string& value, std::vector<std::string>&);
+  void PushUniqueToArray(const std::string& value, std::unordered_set<std::string>&);
 
   /* Log/date/time formats */
   const char* tz_name;             /* Canonical TZ name, e.g., America/Chicago */
@@ -176,17 +178,7 @@ struct GConf {
   int tailing_mode;    /* in tailing-mode? */
 
   /* Array indices */
-  int enable_panel_idx;   /* enable panels index */
-  int filenames_idx;      /* filenames index */
-  int hide_referer_idx;   /* hide referrers index */
-  int ignore_ip_idx;      /* ignored ips index */
-  int ignore_panel_idx;   /* ignored panels index */
-  int ignore_referer_idx; /* ignored referrers index */
-  int ignore_status_idx;  /* ignore status index */
-  int output_format_idx;  /* output format index */
-  int sort_panel_idx;     /* sort panel index */
-  int static_file_idx;    /* static extensions index */
-  int browsers_hash_idx;  /* browsers hash index */
+  int browsers_hash_idx; /* browsers hash index */
 
   size_t static_file_max_len = 0;
 };

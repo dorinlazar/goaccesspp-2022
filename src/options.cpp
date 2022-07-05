@@ -271,13 +271,6 @@ void cmd_help(void) {
   exit(EXIT_FAILURE);
 }
 
-/* Push a command line option to the given array if within bounds and if it's
- * not in the array. */
-static void set_array_opt(const char* oarg, const char* arr[], int* size, int max) {
-  if (str_inarray(oarg, arr, *size) < 0 && *size < max)
-    arr[(*size)++] = oarg;
-}
-
 /* Parse command line long options. */
 static void parse_long_opt(const char* name, const char* oarg) {
   if (!strcmp("no-global-config", name))
@@ -508,8 +501,9 @@ static void parse_long_opt(const char* name, const char* oarg) {
     conf.double_decode = 1;
 
   /* enable panel */
-  if (!strcmp("enable-panel", name))
-    set_array_opt(oarg, conf.enable_panels, &conf.enable_panel_idx, TOTAL_MODULES);
+  if (!strcmp("enable-panel", name)) {
+    conf.PushUniqueToArray(oarg, conf.enable_panels);
+  }
 
   /* hour specificity */
   if (!strcmp("hour-spec", name) && !strcmp(oarg, "min"))
@@ -520,24 +514,28 @@ static void parse_long_opt(const char* name, const char* oarg) {
     conf.ignore_crawlers = 1;
 
   /* ignore panel */
-  if (!strcmp("ignore-panel", name))
-    set_array_opt(oarg, conf.ignore_panels, &conf.ignore_panel_idx, TOTAL_MODULES);
+  if (!strcmp("ignore-panel", name)) {
+    conf.PushUniqueToArray(oarg, conf.ignore_panels);
+  }
 
   /* ignore referrer */
-  if (!strcmp("ignore-referrer", name))
-    set_array_opt(oarg, conf.ignore_referers, &conf.ignore_referer_idx, MAX_IGNORE_REF);
+  if (!strcmp("ignore-referrer", name)) {
+    conf.PushUniqueToArray(oarg, conf.ignore_referers);
+  }
 
   /* client IP validation */
   if (!strcmp("no-ip-validation", name))
     conf.no_ip_validation = 1;
 
   /* hide referrer from report (e.g. within same site) */
-  if (!strcmp("hide-referrer", name))
-    set_array_opt(oarg, conf.hide_referers, &conf.hide_referer_idx, MAX_IGNORE_REF);
+  if (!strcmp("hide-referrer", name)) {
+    conf.PushUniqueToArray(oarg, conf.hide_referers);
+  }
 
   /* ignore status code */
-  if (!strcmp("ignore-status", name))
-    set_array_opt(oarg, conf.ignore_status, &conf.ignore_status_idx, MAX_IGNORE_STATUS);
+  if (!strcmp("ignore-status", name)) {
+    conf.PushUniqueToArray(oarg, conf.ignore_status);
+  }
 
   /* ignore static requests */
   if (!strcmp("ignore-statics", name)) {
@@ -589,14 +587,15 @@ static void parse_long_opt(const char* name, const char* oarg) {
     conf.real_os = 1;
 
   /* sort view */
-  if (!strcmp("sort-panel", name))
-    set_array_opt(oarg, conf.sort_panels, &conf.sort_panel_idx, TOTAL_MODULES);
+  if (!strcmp("sort-panel", name)) {
+    conf.PushUniqueToArray(oarg, conf.sort_panels);
+  }
 
   /* static file */
-  if (!strcmp("static-file", name) && conf.static_file_idx < MAX_EXTENSIONS) {
+  if (!strcmp("static-file", name)) {
     if (conf.static_file_max_len < strlen(oarg))
       conf.static_file_max_len = strlen(oarg);
-    set_array_opt(oarg, conf.static_files, &conf.static_file_idx, MAX_EXTENSIONS);
+    conf.PushUniqueToArray(oarg, conf.static_files);
   }
 
   /* GEOIP OPTIONS
@@ -638,16 +637,14 @@ void verify_global_config(int argc, char** argv) {
 
 /* Attempt to add - to the array of filenames if it hasn't been added it yet. */
 void add_dash_filename(void) {
-  int i;
-  // pre-scan for '-' and don't add if already exists: github.com/allinurl/goaccess/issues/907
-  for (i = 0; i < conf.filenames_idx; ++i) {
-    if (conf.filenames[i][0] == '-' && conf.filenames[i][1] == '\0')
+  for (auto filename: conf.filenames) {
+    if (filename == "-")
       return;
   }
 
-  if (conf.filenames_idx < MAX_FILENAMES && !conf.read_stdin) {
+  if (!conf.read_stdin) {
     conf.read_stdin = 1;
-    conf.filenames[conf.filenames_idx++] = "-";
+    conf.filenames.push_back("-");
   }
 }
 
@@ -661,10 +658,7 @@ void read_option_args(int argc, char** argv) {
     if (-1 == o || EOF == o)
       break;
     switch (o) {
-    case 'f':
-      if (conf.filenames_idx < MAX_FILENAMES)
-        conf.filenames[conf.filenames_idx++] = optarg;
-      break;
+    case 'f': conf.filenames.push_back(optarg); break;
     case 'S':
       if (strchr(optarg, '-')) {
         printf("[ERROR] log-size must be a positive integer\n");
@@ -676,12 +670,7 @@ void read_option_args(int argc, char** argv) {
       /* ignore it */
       break;
     case 'g': conf.geo_db = GEOIP_STANDARD; break;
-    case 'e':
-      if (conf.ignore_ip_idx < MAX_IGNORE_IPS)
-        conf.ignore_ips[conf.ignore_ip_idx++] = optarg;
-      else
-        Log::Debug("Max num of ({}) IPs to ignore reached.", MAX_IGNORE_IPS);
-      break;
+    case 'e': conf.ignore_ips.push_back(optarg); break;
     case 'a': conf.list_agents = 1; break;
     case 'b': conf.browsers_file = optarg; break;
     case 'c': conf.load_conf_dlg = 1; break;
@@ -690,8 +679,7 @@ void read_option_args(int argc, char** argv) {
     case 'o':
       if (!valid_output_type(optarg))
         FATAL("Invalid filename extension. It must be any of .csv, .json, or .html\n");
-      if (conf.output_format_idx < MAX_OUTFORMATS)
-        conf.output_formats[conf.output_format_idx++] = optarg;
+      conf.output_formats.push_back(optarg);
       break;
     case 'l':
       conf.debug_log = optarg;
@@ -730,8 +718,7 @@ void read_option_args(int argc, char** argv) {
       add_dash_filename();
     /* read filenames */
     else {
-      if (conf.filenames_idx < MAX_FILENAMES)
-        conf.filenames[conf.filenames_idx++] = argv[idx];
+      conf.filenames.push_back(argv[idx]);
     }
   }
 }
