@@ -139,7 +139,7 @@ struct GConf {
   int json_pretty_print;          /* pretty print JSON data */
   int list_agents;                /* show list of agents per host */
   int load_conf_dlg;              /* load curses config dialog */
-  int load_global_config;         /* use global config file */
+  bool load_global_config = true; /* use global config file */
   int max_items;                  /* max number of items to output */
   bool mouse_support;             /* add curses mouse support */
   int no_color;                   /* no terminal colors */

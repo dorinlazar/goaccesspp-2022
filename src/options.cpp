@@ -616,7 +616,7 @@ static void parse_long_opt(const char* name, const char* oarg) {
 void verify_global_config(int argc, char** argv) {
   int o, idx = 0;
 
-  conf.load_global_config = 1;
+  conf.load_global_config = true;
   while ((o = getopt_long(argc, argv, short_options, long_opts, &idx)) >= 0) {
     if (-1 == o || EOF == o)
       break;
@@ -625,7 +625,7 @@ void verify_global_config(int argc, char** argv) {
     case 'p': conf.iconfigfile = xstrdup(optarg); break;
     case 0:
       if (!strcmp("no-global-config", long_opts[idx].name))
-        conf.load_global_config = 0;
+        conf.load_global_config = false;
       break;
     case '?': exit(EXIT_FAILURE);
     }
