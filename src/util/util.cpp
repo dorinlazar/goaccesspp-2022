@@ -342,17 +342,16 @@ int ip_in_range(const char* ip) {
  * On success, the given filename is malloc'd and assigned and 0 is
  * returned. */
 int find_output_type(char** filename, const char* ext, int alloc) {
-  int i;
   const char* dot = NULL;
 
-  for (i = 0; i < conf.output_format_idx; ++i) {
+  for (auto fmt: conf.output_formats) {
     /* for backwards compatibility. i.e., -o json  */
-    if (strcmp(conf.output_formats[i], ext) == 0)
+    if (fmt == ext)
       return 0;
 
-    if ((dot = strrchr(conf.output_formats[i], '.')) != NULL && strcmp(dot + 1, ext) == 0) {
+    if ((dot = strrchr(fmt.c_str(), '.')) != NULL && strcmp(dot + 1, ext) == 0) {
       if (alloc)
-        *filename = xstrdup(conf.output_formats[i]);
+        *filename = xstrdup(fmt.c_str());
       return 0;
     }
   }

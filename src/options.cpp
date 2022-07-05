@@ -466,8 +466,9 @@ static void parse_long_opt(const char* name, const char* oarg) {
   }
 
   /* output file */
-  if (!strcmp("output", name))
-    set_array_opt(oarg, conf.output_formats, &conf.output_format_idx, MAX_OUTFORMATS);
+  if (!strcmp("output", name)) {
+    conf.PushUniqueToArray(oarg, conf.output_formats);
+  }
 
   /* PARSE OPTIONS
    * ========================= */
