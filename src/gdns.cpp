@@ -1,33 +1,3 @@
-/**
- * gdns.c -- hosts resolver
- *    ______      ___
- *   / ____/___  /   | _____________  __________
- *  / / __/ __ \/ /| |/ ___/ ___/ _ \/ ___/ ___/
- * / /_/ / /_/ / ___ / /__/ /__/  __(__  |__  )
- * \____/\____/_/  |_\___/\___/\___/____/____/
- *
- * The MIT License (MIT)
- * Copyright (c) 2009-2022 Gerardo Orellana <hello @ goaccess.io>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
 #define _MULTI_THREADED
 
 #include <pthread.h>
@@ -53,80 +23,15 @@
 #include "util/util.h"
 #include "util/xmalloc.h"
 
+#include <deque>
+#include <string>
+#include <algorithm>
+
 GDnsThread gdns_thread;
-static GDnsQueue* gdns_queue;
-
-/* Initialize the queue. */
-void gqueue_init(GDnsQueue* q, int capacity) {
-  q->head = 0;
-  q->tail = -1;
-  q->size = 0;
-  q->capacity = capacity;
-}
-
-/* Get the current size of queue.
- *
- * Returns the size of the queue. */
-int gqueue_size(GDnsQueue* q) { return q->size; }
-
-/* Determine if the queue is empty.
- *
- * Returns true if empty, otherwise false. */
-int gqueue_empty(GDnsQueue* q) { return q->size == 0; }
-
-/* Determine if the queue is full.
- *
- * Returns true if full, otherwise false. */
-int gqueue_full(GDnsQueue* q) { return q->size == q->capacity; }
-
-/* Free the queue. */
-void gqueue_destroy(GDnsQueue* q) { free(q); }
-
-/* Add at the end of the queue a string item.
- *
- * If the queue is full, -1 is returned.
- * If added to the queue, 0 is returned. */
-int gqueue_enqueue(GDnsQueue* q, const char* item) {
-  if (gqueue_full(q))
-    return -1;
-
-  q->tail = (q->tail + 1) % q->capacity;
-  strncpy(q->buffer[q->tail], item, sizeof(q->buffer[q->tail]));
-  q->buffer[q->tail][sizeof(q->buffer[q->tail]) - 1] = '\0';
-  q->size++;
-  return 0;
-}
-
-/* Find a string item in the queue.
- *
- * If the queue is empty, or the item is not in the queue, 0 is returned.
- * If found, 1 is returned. */
-int gqueue_find(GDnsQueue* q, const char* item) {
-  int i;
-  if (gqueue_empty(q))
-    return 0;
-
-  for (i = 0; i < q->size; i++) {
-    if (strcmp(item, q->buffer[i]) == 0)
-      return 1;
-  }
-  return 0;
-}
-
-/* Remove a string item from the head of the queue.
- *
- * If the queue is empty, NULL is returned.
- * If removed, the string item is returned. */
-char* gqueue_dequeue(GDnsQueue* q) {
-  char* item;
-  if (gqueue_empty(q))
-    return NULL;
-
-  item = q->buffer[q->head];
-  q->head = (q->head + 1) % q->capacity;
-  q->size--;
-  return item;
-}
+// replace with a rotating buffer.
+static std::unique_ptr<std::deque<std::string>> gdns_queue;
+static size_t gdns_queue_size = 0;
+static size_t count = 0;
 
 /* Get the corresponding hostname given an IP address.
  *
@@ -151,7 +56,7 @@ static char* reverse_host(const struct sockaddr* a, socklen_t length) {
  *
  * On error, NULL is returned.
  * On success, a malloc'd hostname is returned. */
-char* reverse_ip(char* str) {
+char* reverse_ip(const char* str) {
   union {
     struct sockaddr addr;
     struct sockaddr_in6 addr6;
@@ -160,7 +65,6 @@ char* reverse_ip(char* str) {
 
   if (str == NULL || *str == '\0')
     return NULL;
-
   memset(&a, 0, sizeof(a));
   if (1 == inet_pton(AF_INET, str, &a.addr4.sin_addr)) {
     a.addr4.sin_family = AF_INET;
@@ -175,11 +79,13 @@ char* reverse_ip(char* str) {
 /* Producer - Resolve an IP address and add it to the queue. */
 void dns_resolver(char* addr) {
   pthread_mutex_lock(&gdns_thread.mutex);
-  /* queue is not full and the IP address is not in the queue */
-  if (!gqueue_full(gdns_queue) && !gqueue_find(gdns_queue, addr)) {
-    /* add the IP to the queue */
-    gqueue_enqueue(gdns_queue, addr);
-    pthread_cond_broadcast(&gdns_thread.not_empty);
+  if (gdns_queue->size() >= gdns_queue_size) {
+    auto it = std::find(gdns_queue->begin(), gdns_queue->end(), addr);
+    if (it != gdns_queue->end()) {
+      gdns_queue->push_back(addr);
+      count++;
+      pthread_cond_broadcast(&gdns_thread.not_empty);
+    }
   }
   pthread_mutex_unlock(&gdns_thread.mutex);
 }
@@ -187,18 +93,20 @@ void dns_resolver(char* addr) {
 /* Consumer - Once an IP has been resolved, add it to dwithe hostnames
  * hash structure. */
 static void* dns_worker(void GO_UNUSED(*ptr_data)) {
-  char *ip = NULL, *host = NULL;
+  char* host = NULL;
 
   while (1) {
     pthread_mutex_lock(&gdns_thread.mutex);
     /* wait until an item has been added to the queue */
-    while (gqueue_empty(gdns_queue))
+    while (gdns_queue->empty()) {
       pthread_cond_wait(&gdns_thread.not_empty, &gdns_thread.mutex);
+    }
 
-    ip = gqueue_dequeue(gdns_queue);
+    auto ip = gdns_queue->front();
+    gdns_queue->pop_front();
 
     pthread_mutex_unlock(&gdns_thread.mutex);
-    host = reverse_ip(ip);
+    host = reverse_ip(ip.c_str());
     pthread_mutex_lock(&gdns_thread.mutex);
 
     if (!active_gdns) {
@@ -209,7 +117,7 @@ static void* dns_worker(void GO_UNUSED(*ptr_data)) {
 
     /* insert the corresponding IP -> hostname map */
     if (host != NULL && active_gdns) {
-      ht_insert_hostname(ip, host);
+      ht_insert_hostname(ip.c_str(), host);
       free(host);
     }
 
@@ -221,8 +129,8 @@ static void* dns_worker(void GO_UNUSED(*ptr_data)) {
 
 /* Initialize queue and dns thread */
 void gdns_init(void) {
-  gdns_queue = (GDnsQueue*)xmalloc(sizeof(GDnsQueue));
-  gqueue_init(gdns_queue, QUEUE_SIZE);
+  gdns_queue = std::make_unique<std::deque<std::string>>();
+  gdns_queue_size = QUEUE_SIZE;
 
   if (pthread_cond_init(&(gdns_thread.not_empty), NULL))
     FATAL("Failed init thread condition");
@@ -235,12 +143,15 @@ void gdns_init(void) {
 }
 
 /* Destroy (free) queue */
-void gdns_free_queue(void) { gqueue_destroy(gdns_queue); }
+void gdns_free_queue(void) {
+  gdns_queue.reset();
+  fprintf(stderr, "COUNT IS %ld\n", count);
+}
 
 /* Create a DNS thread and make it active */
 void gdns_thread_create(void) {
   int th;
-
+  Log::Debug("Created gdns thread");
   active_gdns = 1;
   th = pthread_create(&(gdns_thread.thread), NULL, dns_worker, NULL);
   if (th)

@@ -1302,6 +1302,7 @@ static Logs* initializer(void) {
 
   /* init reverse lookup thread */
   gdns_init();
+  Log::Trace("GDNS Initialized");
 
   /* init random number generator */
   srand(getpid());

@@ -367,6 +367,8 @@ static void add_host_child_to_holder(GHolder* h) {
   hostname = ht_get_hostname(ip);
   pthread_mutex_unlock(&gdns_thread.mutex);
 
+  Log::Debug("GDNS resolve for ", ip);
+
   /* determine if we have the IP's hostname */
   if (!hostname) {
     dns_resolver(ip);
