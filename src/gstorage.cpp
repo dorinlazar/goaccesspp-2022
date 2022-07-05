@@ -39,12 +39,12 @@
 #include "geo/geoip1.h"
 #include "browsers.h"
 #include "commons.h"
-#include "error.hpp"
+#include "util/error.hpp"
 #include "gkhash.h"
 #include "opesys.h"
 #include "ui/ui.h"
-#include "util.h"
-#include "xmalloc.h"
+#include "util/util.h"
+#include "util/xmalloc.h"
 
 /* private prototypes */
 /* key/data generators for each module */

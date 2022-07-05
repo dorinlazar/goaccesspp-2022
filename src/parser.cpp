@@ -52,13 +52,13 @@
 #include "parser.h"
 
 #include "browsers.h"
-#include "error.hpp"
+#include "util/error.hpp"
 #include "goaccess.h"
 #include "gstorage.h"
 #include "pdjson.h"
-#include "util.h"
+#include "util/util.h"
 #include "websocket/websocket.h"
-#include "xmalloc.h"
+#include "util/xmalloc.h"
 
 /* Allocate memory for a new GRawData instance.
  *

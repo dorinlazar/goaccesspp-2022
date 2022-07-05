@@ -34,9 +34,9 @@
 #include <getopt.h>
 #include <errno.h>
 
-#include "error.hpp"
+#include "util/error.hpp"
 #include "settings.h"
-#include "util.h"
+#include "util/util.h"
 
 #include "sort.h"
 

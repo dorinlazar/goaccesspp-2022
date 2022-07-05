@@ -45,10 +45,10 @@
 
 #include "csv.h"
 
-#include "error.hpp"
+#include "util/error.hpp"
 #include "gkhash.h"
 #include "ui/ui.h"
-#include "util.h"
+#include "util/util.h"
 
 struct tm now_tm;
 

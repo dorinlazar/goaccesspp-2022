@@ -36,7 +36,7 @@
 
 #include "gslist.h"
 #include "gstorage.h"
-#include "xmalloc.h"
+#include "util/xmalloc.h"
 
 /* Instantiate a new Singly linked-list node.
  *

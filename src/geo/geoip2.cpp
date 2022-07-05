@@ -36,10 +36,10 @@
 
 #include "geoip1.h"
 
-#include "error.hpp"
+#include "util/error.hpp"
 #include "labels.h"
-#include "util.h"
-#include "xmalloc.h"
+#include "util/util.h"
+#include "util/xmalloc.h"
 
 /* should be reused across lookups */
 int geoip_city_type = 0;

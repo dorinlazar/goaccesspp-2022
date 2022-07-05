@@ -32,20 +32,18 @@
 #include <string.h>
 
 #include "base64.h"
-#include "xmalloc.h"
+#include "util/xmalloc.h"
 
 /* Encodes the given data with base64..
  *
  * On success, the encoded nul-terminated data, as a string is returned. */
-char *
-base64_encode (const void *buf, size_t size) {
-  static const char base64[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+char* base64_encode(const void* buf, size_t size) {
+  static const char base64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-  char *str = (char *) xmalloc ((size + 3) * 4 / 3 + 1);
+  char* str = (char*)xmalloc((size + 3) * 4 / 3 + 1);
 
-  char *p = str;
-  const unsigned char *q = (const unsigned char *) buf;
+  char* p = str;
+  const unsigned char* q = (const unsigned char*)buf;
   size_t i = 0;
 
   while (i < size) {

@@ -38,11 +38,11 @@
 
 #include "options.h"
 
-#include "error.hpp"
+#include "util/error.hpp"
 #include "labels.h"
-#include "util.h"
+#include "util/util.h"
 
-#include "xmalloc.h"
+#include "util/xmalloc.h"
 
 static char short_options[] = "f:e:p:o:l:H:M:S:b:gacirmMhHqdsV";
 

@@ -35,8 +35,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "error.hpp"
-#include "xmalloc.h"
+#include "util/error.hpp"
+#include "util/xmalloc.h"
 
 /* Self-checking wrapper to malloc() */
 void* xmalloc(size_t size) {

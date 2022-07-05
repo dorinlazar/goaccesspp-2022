@@ -55,7 +55,7 @@
 #include "gkhash.h"
 #include "browsers.h"
 #include "csv.h"
-#include "error.hpp"
+#include "util/error.hpp"
 #include "gdashboard.h"
 #include "gdns.h"
 #include "gholder.h"
@@ -64,9 +64,9 @@
 #include "json.h"
 #include "options.h"
 #include "output.h"
-#include "util.h"
+#include "util/util.h"
 #include "websocket/websocket.h"
-#include "xmalloc.h"
+#include "util/xmalloc.h"
 
 // ------------------
 #include "opsys/osutils.hpp"

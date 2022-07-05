@@ -36,10 +36,10 @@
 
 #include "browsers.h"
 
-#include "error.hpp"
+#include "util/error.hpp"
 #include "settings.h"
-#include "util.h"
-#include "xmalloc.h"
+#include "util/util.h"
+#include "util/xmalloc.h"
 
 /* ###NOTE: The size of the list is proportional to the run time,
  * which makes this pretty slow */

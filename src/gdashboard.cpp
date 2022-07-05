@@ -42,10 +42,10 @@
 #include "gkhash.h"
 #include "gholder.h"
 #include "color.h"
-#include "error.hpp"
+#include "util/error.hpp"
 #include "gstorage.h"
-#include "util.h"
-#include "xmalloc.h"
+#include "util/util.h"
+#include "util/xmalloc.h"
 
 static GFind find_t;
 

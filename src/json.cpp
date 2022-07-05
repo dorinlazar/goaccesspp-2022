@@ -45,13 +45,13 @@
 
 #include "json.h"
 
-#include "error.hpp"
+#include "util/error.hpp"
 #include "gkhash.h"
 #include "settings.h"
 #include "ui/ui.h"
-#include "util.h"
+#include "util/util.h"
 #include "websocket/websocket.h"
-#include "xmalloc.h"
+#include "util/xmalloc.h"
 
 typedef struct GPanel_ {
   GModule module;

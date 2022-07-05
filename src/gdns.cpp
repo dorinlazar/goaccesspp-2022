@@ -47,11 +47,11 @@
 
 #include "gdns.h"
 
-#include "error.hpp"
+#include "util/error.hpp"
 #include "gkhash.h"
 #include "goaccess.h"
-#include "util.h"
-#include "xmalloc.h"
+#include "util/util.h"
+#include "util/xmalloc.h"
 
 GDnsThread gdns_thread;
 static GDnsQueue* gdns_queue;

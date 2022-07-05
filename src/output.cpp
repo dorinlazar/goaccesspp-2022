@@ -40,14 +40,14 @@
 
 #include "output.h"
 
-#include "error.hpp"
+#include "util/error.hpp"
 #include "gkhash.h"
 #include "websocket/gwsocket.h"
 #include "json.h"
 #include "settings.h"
 #include "ui/ui.h"
-#include "util.h"
-#include "xmalloc.h"
+#include "util/util.h"
+#include "util/xmalloc.h"
 
 #include "resources/tpls.h"
 #include "resources/bootstrapcss.h"

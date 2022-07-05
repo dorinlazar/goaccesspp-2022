@@ -37,12 +37,12 @@
 
 #include "persistence.h"
 
-#include "error.hpp"
+#include "util/error.hpp"
 #include "gkhash.h"
 #include "sort.h"
 #include "tpl.h"
-#include "util.h"
-#include "xmalloc.h"
+#include "util/util.h"
+#include "util/xmalloc.h"
 
 static uint32_t* persisted_dates = NULL;
 static uint32_t persisted_dates_len = 0;

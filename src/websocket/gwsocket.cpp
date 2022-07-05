@@ -40,13 +40,13 @@
 #include "gwsocket.h"
 
 #include "commons.h"
-#include "error.hpp"
+#include "util/error.hpp"
 #include "goaccess.h"
 #include "json.h"
 #include "parser.h"
 #include "settings.h"
 #include "websocket.h"
-#include "xmalloc.h"
+#include "util/xmalloc.h"
 
 /* Allocate memory for a new GWSReader instance.
  *

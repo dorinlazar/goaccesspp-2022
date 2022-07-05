@@ -38,11 +38,11 @@
 
 #include "gholder.h"
 
-#include "error.hpp"
+#include "util/error.hpp"
 #include "gdns.h"
 #include "gkhash.h"
-#include "util.h"
-#include "xmalloc.h"
+#include "util/util.h"
+#include "util/xmalloc.h"
 
 #include "geo/geoip1.h"
 

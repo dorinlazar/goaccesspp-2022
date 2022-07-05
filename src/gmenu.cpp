@@ -35,7 +35,7 @@
 
 #include "gmenu.h"
 
-#include "xmalloc.h"
+#include "util/xmalloc.h"
 #include "ui/ui.h"
 
 /* Allocate memory for a new GMenu instance.

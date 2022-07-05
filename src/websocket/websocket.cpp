@@ -50,10 +50,10 @@
 #include "websocket.h"
 
 #include "base64.h"
-#include "error.hpp"
+#include "util/error.hpp"
 #include "gslist.h"
 #include "sha1.h"
-#include "xmalloc.h"
+#include "util/xmalloc.h"
 
 /* UTF-8 Decoder */
 /* Copyright (c) 2008-2009 Bjoern Hoehrmann <bjoern@hoehrmann.de>

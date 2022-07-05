@@ -56,9 +56,9 @@
 
 #include "util.h"
 
-#include "error.hpp"
+#include "util/error.hpp"
 #include "labels.h"
-#include "xmalloc.h"
+#include "util/xmalloc.h"
 
 /* HTTP status codes categories */
 static const char* code_type[][2] = {

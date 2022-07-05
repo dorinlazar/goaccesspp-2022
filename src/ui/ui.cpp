@@ -55,12 +55,12 @@
 #include "ui.h"
 
 #include "color.h"
-#include "error.hpp"
+#include "util/error.hpp"
 #include "gkhash.h"
 #include "gmenu.h"
 #include "goaccess.h"
-#include "util.h"
-#include "xmalloc.h"
+#include "util/util.h"
+#include "util/xmalloc.h"
 
 /* Determine which metrics should be displayed per module/panel */
 static GOutput outputting[] = {

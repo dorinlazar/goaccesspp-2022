@@ -38,11 +38,11 @@
 
 #include "gkhash.h"
 
-#include "error.hpp"
+#include "util/error.hpp"
 #include "persistence.h"
 #include "sort.h"
-#include "util.h"
-#include "xmalloc.h"
+#include "util/util.h"
+#include "util/xmalloc.h"
 
 /* Hash table that holds DB instances */
 static khash_t(igdb) * ht_db = NULL;

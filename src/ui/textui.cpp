@@ -2,7 +2,7 @@
 
 #include <cstring>
 #include <memory>
-#include "error.hpp"
+#include "util/error.hpp"
 
 namespace goapp {
 

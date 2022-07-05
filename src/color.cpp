@@ -36,10 +36,10 @@
 
 #include "color.h"
 
-#include "error.hpp"
+#include "util/error.hpp"
 #include "gslist.h"
-#include "util.h"
-#include "xmalloc.h"
+#include "util/util.h"
+#include "util/xmalloc.h"
 
 static GSLList* color_list = NULL;
 static GSLList* pair_list = NULL;
