@@ -30,8 +30,6 @@
 GDnsThread gdns_thread;
 // replace with a rotating buffer.
 static std::unique_ptr<std::deque<std::string>> gdns_queue;
-static size_t gdns_queue_size = 0;
-static size_t count = 0;
 
 /* Get the corresponding hostname given an IP address.
  *
@@ -82,7 +80,6 @@ void dns_resolver(char* addr) {
   auto it = std::find(gdns_queue->begin(), gdns_queue->end(), addr);
   if (it == gdns_queue->end()) {
     gdns_queue->push_back(addr);
-    count++;
     pthread_cond_broadcast(&gdns_thread.not_empty);
   }
   pthread_mutex_unlock(&gdns_thread.mutex);
@@ -128,7 +125,6 @@ static void* dns_worker(void GO_UNUSED(*ptr_data)) {
 /* Initialize queue and dns thread */
 void gdns_init(void) {
   gdns_queue = std::make_unique<std::deque<std::string>>();
-  gdns_queue_size = QUEUE_SIZE;
 
   if (pthread_cond_init(&(gdns_thread.not_empty), NULL))
     FATAL("Failed init thread condition");
@@ -141,10 +137,7 @@ void gdns_init(void) {
 }
 
 /* Destroy (free) queue */
-void gdns_free_queue(void) {
-  gdns_queue.reset();
-  fprintf(stderr, "COUNT IS %ld\n", count);
-}
+void gdns_free_queue(void) { gdns_queue.reset(); }
 
 /* Create a DNS thread and make it active */
 void gdns_thread_create(void) {

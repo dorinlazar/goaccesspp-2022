@@ -211,8 +211,8 @@ static char* render_child_node(const char* data) {
   int len = 0;
 
   /* chars to use based on encoding used */
-  const char* bend = "|";
-  const char* horz = "`-";
+  const char* bend = "\xe2\x94\x9c";
+  const char* horz = "\xe2\x94\x80";
   if (data == NULL || *data == '\0')
     return NULL;
 
