@@ -79,13 +79,11 @@ char* reverse_ip(const char* str) {
 /* Producer - Resolve an IP address and add it to the queue. */
 void dns_resolver(char* addr) {
   pthread_mutex_lock(&gdns_thread.mutex);
-  if (gdns_queue->size() >= gdns_queue_size) {
-    auto it = std::find(gdns_queue->begin(), gdns_queue->end(), addr);
-    if (it != gdns_queue->end()) {
-      gdns_queue->push_back(addr);
-      count++;
-      pthread_cond_broadcast(&gdns_thread.not_empty);
-    }
+  auto it = std::find(gdns_queue->begin(), gdns_queue->end(), addr);
+  if (it == gdns_queue->end()) {
+    gdns_queue->push_back(addr);
+    count++;
+    pthread_cond_broadcast(&gdns_thread.not_empty);
   }
   pthread_mutex_unlock(&gdns_thread.mutex);
 }
