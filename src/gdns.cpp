@@ -149,3 +149,11 @@ void gdns_thread_create(void) {
     FATAL("Return code from pthread_create(): {}", th);
   pthread_detach(gdns_thread.thread);
 }
+
+DNSResolver::DNSResolver() {}
+DNSResolver::~DNSResolver() {}
+
+std::string DNSResolver::ReverseIp(const std::string& ip) {}
+void DNSResolver::ResolveDns(const std::string& address) {}
+
+void DNSResolver::DnsResolveWorker() {}
