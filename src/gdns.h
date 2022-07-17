@@ -16,6 +16,7 @@ extern GDnsThread gdns_thread;
 #include <mutex>
 #include <string>
 #include <thread>
+#include <deque>
 #include <condition_variable>
 
 class DNSResolver final {

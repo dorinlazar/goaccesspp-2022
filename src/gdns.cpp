@@ -153,7 +153,7 @@ void gdns_thread_create(void) {
 DNSResolver::DNSResolver() {}
 DNSResolver::~DNSResolver() {}
 
-std::string DNSResolver::ReverseIp(const std::string& ip) {}
-void DNSResolver::ResolveDns(const std::string& address) {}
+std::string DNSResolver::ReverseIp([[maybe_unused]] const std::string& ip) { return ip; }
+void DNSResolver::ResolveDns([[maybe_unused]] const std::string& address) {}
 
 void DNSResolver::DnsResolveWorker() {}
