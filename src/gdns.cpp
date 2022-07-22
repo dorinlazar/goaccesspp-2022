@@ -153,7 +153,42 @@ void gdns_thread_create(void) {
 DNSResolver::DNSResolver() {}
 DNSResolver::~DNSResolver() {}
 
-std::string DNSResolver::ReverseIp([[maybe_unused]] const std::string& ip) { return ip; }
+std::optional<std::string> DNSResolver::ReverseIp([[maybe_unused]] const std::string& ip) {
+  if (ip.size() == 0)
+    return std::nullopt;
+
+  union {
+    struct sockaddr sin;
+    struct sockaddr_in sin4;
+    struct sockaddr_in6 sin6;
+  } sa;
+
+  ::memset(&sa, 0, sizeof(sa));
+
+  socklen_t length = 0;
+
+  if (inet_pton(AF_INET, ip.c_str(), &sa.sin4.sin_addr) == 1) {
+    sa.sin4.sin_family = AF_INET;
+    length = sizeof(sa.sin4);
+  } else if (inet_pton(AF_INET6, ip.c_str(), &sa.sin6.sin6_addr) == 1) {
+    sa.sin6.sin6_family = AF_INET6;
+    length = sizeof(sa.sin6);
+  }
+
+  if (length > 0) {
+    std::array<char, 256> buffer; // As per RFC1035
+    buffer[0] = '\0';
+    buffer[buffer.size() - 1] = '\0';
+
+    auto res = getnameinfo(&sa.sin, length, buffer.begin(), buffer.size() - 1, nullptr, 0, NI_NAMEREQD);
+    if (res == 0) {
+      return std::string(buffer.begin());
+    }
+  }
+
+  return std::nullopt;
+}
+
 void DNSResolver::ResolveDns([[maybe_unused]] const std::string& address) {}
 
 void DNSResolver::DnsResolveWorker() {}

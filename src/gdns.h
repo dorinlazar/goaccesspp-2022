@@ -17,6 +17,7 @@ extern GDnsThread gdns_thread;
 #include <string>
 #include <thread>
 #include <deque>
+#include <optional>
 #include <condition_variable>
 
 class DNSResolver final {
@@ -24,7 +25,7 @@ public:
   DNSResolver();
   ~DNSResolver();
 
-  std::string ReverseIp(const std::string& ip);
+  std::optional<std::string> ReverseIp(const std::string& ip);
   void ResolveDns(const std::string& address);
 
 private:
