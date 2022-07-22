@@ -1,17 +1,4 @@
 #pragma once
-#ifndef GDNS_H_INCLUDED
-#define GDNS_H_INCLUDED
-
-#define H_SIZE 1025
-
-typedef struct GDnsThread_ {
-  pthread_cond_t not_empty; /* not empty queue condition */
-  pthread_cond_t not_full;  /* not full queue condition */
-  pthread_mutex_t mutex;
-  pthread_t thread;
-} GDnsThread;
-
-extern GDnsThread gdns_thread;
 
 #include <mutex>
 #include <string>
@@ -19,6 +6,7 @@ extern GDnsThread gdns_thread;
 #include <deque>
 #include <optional>
 #include <condition_variable>
+#include <unordered_map>
 
 class DNSResolver final {
 public:
@@ -27,22 +15,17 @@ public:
 
   std::optional<std::string> ReverseIp(const std::string& ip);
   void ResolveDns(const std::string& address);
+  std::optional<std::string> GetCachedHost(const std::string& ip);
 
 private:
-  void DnsResolveWorker();
+  void DnsResolveWorker(std::stop_token stoken);
 
 private:
-  std::condition_variable m_cond;
+  std::condition_variable_any m_cond;
   std::mutex m_mutex;
   std::jthread m_thread;
   std::deque<std::string> m_queue;
+  std::unordered_map<std::string, std::string> m_cache;
 };
 
-char* reverse_ip(const char* str);
-void dns_resolver(char* addr);
-void gdns_free_queue(void);
-void gdns_init(void);
-void gdns_queue_free(void);
-void gdns_thread_create(void);
-
-#endif
+extern std::unique_ptr<DNSResolver> g_dns_resolver;

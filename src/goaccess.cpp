@@ -119,19 +119,13 @@ static GScroll gscroll = {
 
 /* Free malloc'd holder */
 static void house_keeping_holder(void) {
-  /* REVERSE DNS THREAD */
-  pthread_mutex_lock(&gdns_thread.mutex);
-
   /* kill dns pthread */
   active_gdns = 0;
   /* clear holder structure */
   free_holder(&holder);
-  /* clear reverse dns queue */
-  gdns_free_queue();
   /* clear the whole storage */
   free_storage();
-
-  pthread_mutex_unlock(&gdns_thread.mutex);
+  g_dns_resolver.reset();
 }
 
 /* Free malloc'd data across the whole program */
@@ -1160,7 +1154,7 @@ static void standard_output(Logs* logs) {
 static void curses_output(Logs* logs) {
   allocate_data();
   if (!conf.skip_term_resolver)
-    gdns_thread_create();
+    g_dns_resolver = std::make_unique<DNSResolver>();
 
   clean_stdscrn();
   render_screens(0);

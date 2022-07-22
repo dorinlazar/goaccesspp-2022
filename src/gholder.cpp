@@ -292,7 +292,7 @@ static void sort_sub_list(GHolder* h, GSort sort) {
 /* Set the data metric field for the host panel.
  *
  * On success, the data field/metric is set. */
-static int set_host_child_metrics(char* data, uint8_t id, GMetrics** nmetrics) {
+static int set_host_child_metrics(const char* data, uint8_t id, GMetrics** nmetrics) {
   GMetrics* metrics;
 
   metrics = new_gmetrics();
@@ -312,7 +312,7 @@ static void set_host_sub_list(GHolder* h, GSubList* sub_list) {
   char continent[CONTINENT_LEN] = "";
   char country[COUNTRY_LEN] = "";
 
-  char *host = h->items[h->idx].metrics->data, *hostname = NULL;
+  char* host = h->items[h->idx].metrics->data;
   /* add geolocation child nodes */
   set_geolocation(host, continent, country, city);
 
@@ -340,12 +340,11 @@ static void set_host_sub_list(GHolder* h, GSubList* sub_list) {
 
   /* hostname */
   if (conf.enable_html_resolver && conf.output_stdout && !conf.no_ip_validation) {
-    hostname = reverse_ip(host);
-    set_host_child_metrics(hostname, MTRC_ID_HOSTNAME, &nmetrics);
+    auto hostname = g_dns_resolver->ReverseIp(host);
+    set_host_child_metrics(hostname.value_or("[NONAME]").c_str(), MTRC_ID_HOSTNAME, &nmetrics);
     add_sub_item_back(sub_list, h->module, nmetrics);
     h->items[h->idx].sub_list = sub_list;
     h->sub_items_size++;
-    free(hostname);
   }
 }
 
@@ -357,27 +356,19 @@ static void add_host_child_to_holder(GHolder* h) {
   GSubList* sub_list = new_gsublist();
 
   char* ip = h->items[h->idx].metrics->data;
-  char* hostname = NULL;
   int n = h->sub_items_size;
 
   /* add child nodes */
   set_host_sub_list(h, sub_list);
 
-  pthread_mutex_lock(&gdns_thread.mutex);
-  hostname = ht_get_hostname(ip);
-  pthread_mutex_unlock(&gdns_thread.mutex);
-
-  Log::Debug("GDNS resolve for ", ip);
+  auto hostname = g_dns_resolver->GetCachedHost(ip);
 
   /* determine if we have the IP's hostname */
-  if (!hostname) {
-    dns_resolver(ip);
-  } else if (hostname) {
-    set_host_child_metrics(hostname, MTRC_ID_HOSTNAME, &nmetrics);
+  if (hostname.has_value()) {
+    set_host_child_metrics(hostname->c_str(), MTRC_ID_HOSTNAME, &nmetrics);
     add_sub_item_back(sub_list, h->module, nmetrics);
     h->items[h->idx].sub_list = sub_list;
     h->sub_items_size++;
-    free(hostname);
   }
 
   /* did not add any items */
